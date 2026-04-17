@@ -8,10 +8,13 @@ const {
 } = require('./constants');
 
 class NLPKnowledgeGraph {
-    constructor() {
+    constructor(options = {}) {
         this.nodes = new Map();
         this.edges = new Map();
         this.edgeIndex = 0;
+        this.pythonResolverUrl =
+            options.pythonResolverUrl || process.env.PYTHON_RESOLVER_URL || 'http://127.0.0.1:8000';
+        this.pythonResolverTimeoutMs = options.pythonResolverTimeoutMs || 7000;
         this.sigmaGraphData = {
             nodes: [],
             edges: [],
@@ -96,7 +99,7 @@ class NLPKnowledgeGraph {
     async resolveOOVWord(word, language, sourceContext = null) {
         const node = this.getOrCreateNode(word, language);
 
-        let result = await this._contextInference(word, sourceContext);
+        let result = await this._contextInference(word, language, sourceContext);
         if (result.success) {
             this.updateNodeConfidence(
                 node.id,
@@ -155,19 +158,77 @@ class NLPKnowledgeGraph {
         };
     }
 
-    async _contextInference(word, context) {
-        // TODO: Implement context-based inference logic using NLP techniques
-        return { success: false };
+    async _contextInference(word, language, context) {
+        return this._callPythonResolver(
+            RESOLUTION_STAGES.CONTEXT_INFERENCE,
+            word,
+            language,
+            context
+        );
     }
 
     async _dictionaryLookup(word, targetLanguage) {
-        // TODO: Implement dictionary lookup logic
-        return { success: false };
+        return this._callPythonResolver(
+            RESOLUTION_STAGES.DICTIONARY_LOOKUP,
+            word,
+            targetLanguage,
+            null
+        );
     }
 
     async _transliteration(word, language) {
-        // TODO: Implement transliteration logic
-        return { success: false };
+        return this._callPythonResolver(
+            RESOLUTION_STAGES.TRANSLITERATION,
+            word,
+            language,
+            null
+        );
+    }
+
+    async _callPythonResolver(stageHint, word, language, sourceContext) {
+        if (typeof fetch !== 'function') {
+            console.warn('Global fetch is unavailable. Python resolver call skipped.');
+            return { success: false };
+        }
+
+        const controller = new AbortController();
+        const timeoutHandle = setTimeout(() => controller.abort(), this.pythonResolverTimeoutMs);
+
+        try {
+            const response = await fetch(`${this.pythonResolverUrl}/resolve`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    word,
+                    language,
+                    sourceContext,
+                    stageHint,
+                }),
+                signal: controller.signal,
+            });
+
+            if (!response.ok) {
+                console.warn(`Python resolver returned ${response.status}`);
+                return { success: false };
+            }
+
+            const payload = await response.json();
+            return {
+                success: Boolean(payload.success),
+                translation: payload.translation || null,
+                stage: payload.stage || stageHint,
+                confidence: payload.confidence || CONFIDENCE_STATES.UNKNOWN,
+                domain: payload.domain || SEMANTIC_DOMAINS.GENERAL,
+                relatedTerms: Array.isArray(payload.relatedTerms) ? payload.relatedTerms : [],
+            };
+        } catch (error) {
+            console.warn(`Python resolver request failed: ${error.message}`);
+            return { success: false };
+        } finally {
+            clearTimeout(timeoutHandle);
+        }
     }
 
     getSigmaGraphData() {
@@ -197,7 +258,7 @@ class NLPKnowledgeGraph {
             label: edge.type,
             weight: edge.weight,
             attributes: {
-                type: edge.type,
+                semanticType: edge.type,
             },
         }));
 
