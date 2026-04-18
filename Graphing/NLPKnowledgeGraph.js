@@ -66,7 +66,7 @@ class NLPKnowledgeGraph {
         return node;
     }
 
-    addEdge(sourceId, targetId, edgeType, weight = 0.5) {
+    addEdge(sourceId, targetId, edgeType, weight = 0.5, metadata = {}) {
         const source = this.nodes.get(sourceId);
         const target = this.nodes.get(targetId);
 
@@ -76,7 +76,7 @@ class NLPKnowledgeGraph {
         }
 
         const edgeId = `edge_${this.edgeIndex++}`;
-        const edge = new KnowledgeGraphEdge(sourceId, targetId, edgeType, weight);
+        const edge = new KnowledgeGraphEdge(sourceId, targetId, edgeType, weight, metadata, edgeId);
         this.edges.set(edgeId, edge);
 
         this._addEdgeToSigmaGraph(edgeId, edge);
@@ -251,14 +251,15 @@ class NLPKnowledgeGraph {
             },
         }));
 
-        const edges = Array.from(this.edges.values()).map(edge => ({
-            key: `edge_${edge.sourceId}_${edge.targetId}`,
+        const edges = Array.from(this.edges.entries()).map(([edgeId, edge]) => ({
+            key: edge.id || edgeId,
             source: edge.sourceId,
             target: edge.targetId,
             label: edge.type,
             weight: edge.weight,
             attributes: {
                 semanticType: edge.type,
+                ...edge.metadata,
             },
         }));
 
@@ -330,15 +331,95 @@ class NLPKnowledgeGraph {
     exportGraph() {
         return {
             nodes: Array.from(this.nodes.values()),
-            edges: Array.from(this.edges.values()),
+            edges: Array.from(this.edges.entries()).map(([edgeId, edge]) => ({
+                ...edge,
+                id: edge.id || edgeId,
+            })),
             statistics: this.statistics,
             exportedAt: new Date(),
         };
     }
 
     importGraph(data) {
-        // TODO: Implement graph import logic to reconstruct nodes, edges, and statistics from exported data
-        console.log('Graph import not yet implemented');
+        if (!data || !Array.isArray(data.nodes) || !Array.isArray(data.edges)) {
+            throw new Error('Invalid graph import payload. Expected nodes and edges arrays.');
+        }
+
+        this.clear();
+
+        data.nodes.forEach(rawNode => {
+            const node = new KnowledgeGraphNode(
+                rawNode.id,
+                rawNode.word,
+                rawNode.language,
+                rawNode.domain
+            );
+
+            node.confidenceStatus = rawNode.confidenceStatus || CONFIDENCE_STATES.UNKNOWN;
+            node.createdAt = rawNode.createdAt ? new Date(rawNode.createdAt) : new Date();
+            node.lastUpdated = rawNode.lastUpdated ? new Date(rawNode.lastUpdated) : node.createdAt;
+            node.resolutionPath = Array.isArray(rawNode.resolutionPath)
+                ? rawNode.resolutionPath.map(step => ({
+                    ...step,
+                    timestamp: step.timestamp ? new Date(step.timestamp) : new Date(),
+                }))
+                : [];
+            node.occurrenceCount = rawNode.occurrenceCount || 1;
+            node.metadata = {
+                partOfSpeech: null,
+                morphologicalRoot: null,
+                contextExamples: [],
+                ...(rawNode.metadata || {}),
+            };
+
+            this.nodes.set(node.id, node);
+        });
+
+        data.edges.forEach((rawEdge, index) => {
+            const edgeId = rawEdge.id || `edge_${index}`;
+            const edge = new KnowledgeGraphEdge(
+                rawEdge.sourceId,
+                rawEdge.targetId,
+                rawEdge.type,
+                rawEdge.weight,
+                rawEdge.metadata || {},
+                edgeId
+            );
+
+            edge.createdAt = rawEdge.createdAt ? new Date(rawEdge.createdAt) : new Date();
+            this.edges.set(edgeId, edge);
+        });
+
+        this.edgeIndex = this._getNextEdgeIndex();
+        this.statistics = data.statistics
+            ? { ...this.statistics, ...data.statistics }
+            : this._recalculateStatistics();
+        this._updateResolutionRate();
+
+        return this.getStatistics();
+    }
+
+    _getNextEdgeIndex() {
+        return Array.from(this.edges.keys()).reduce((nextIndex, edgeId) => {
+            const match = /^edge_(\d+)$/.exec(edgeId);
+            if (!match) return nextIndex;
+            return Math.max(nextIndex, Number(match[1]) + 1);
+        }, this.edges.size);
+    }
+
+    _recalculateStatistics() {
+        const nodes = Array.from(this.nodes.values());
+        const resolvedNodes = nodes.filter(
+            node => node.confidenceStatus !== CONFIDENCE_STATES.UNKNOWN
+        ).length;
+        const unresolvedNodes = nodes.length - resolvedNodes;
+
+        return {
+            totalNodesProcessed: nodes.length,
+            resolvedNodes,
+            unresolvedNodes,
+            resolutionSuccessRate: 0,
+        };
     }
 
     clear() {
