@@ -19,3 +19,7 @@
 - Added relation grouping and per-relation colors to Sigma graph edge attributes for later visualization filtering.
 - Updated sample graph generation to include `belongs_to`, `related_to`, `derived_from`, `translates_to`, and `conflicts_with` examples.
 - Regenerated `Graphing/sample-graph.json` with semantic relation examples and corrected statistics refresh before reporting.
+- Added resolver-side semantic enrichment for coarse domains, related terms, and simple morphological roots.
+- Updated Python-generated Sigma payloads so direct `/translate-sentence` responses include semantic relation groups, relation colors, domain nodes, related-term edges, and derived-root edges.
+- Wired resolver `morphologicalRoot` values into `Graphing/NLPKnowledgeGraph.js` so OOV graph resolution can create `derived_from` edges.
+- Returned semantic metadata in `/translate-sentence` resolution summaries and constrained root inference to avoid noisy roots like `computer -> comput`.

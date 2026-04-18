@@ -268,6 +268,7 @@ class NLPKnowledgeGraph {
                 confidence: CONFIDENCE_STATES.INFERRED,
                 domain: result.domain,
                 relatedTerms: result.relatedTerms,
+                morphologicalRoot: result.morphologicalRoot,
             };
         }
 
@@ -285,6 +286,7 @@ class NLPKnowledgeGraph {
                 confidence: CONFIDENCE_STATES.VERIFIED,
                 domain: result.domain,
                 relatedTerms: result.relatedTerms,
+                morphologicalRoot: result.morphologicalRoot,
             };
         }
 
@@ -302,6 +304,7 @@ class NLPKnowledgeGraph {
                 confidence: CONFIDENCE_STATES.INFERRED,
                 domain: result.domain,
                 relatedTerms: result.relatedTerms,
+                morphologicalRoot: result.morphologicalRoot,
             };
         }
 
@@ -318,6 +321,7 @@ class NLPKnowledgeGraph {
             flaggedForReview: true,
             domain: SEMANTIC_DOMAINS.GENERAL,
             relatedTerms: [],
+            morphologicalRoot: null,
         };
     }
 
@@ -359,6 +363,12 @@ class NLPKnowledgeGraph {
                     this.addRelatedTerm(sourceNode.id, relatedWord, relatedLanguage, relatedWeight, {
                         source: 'resolver-related-term',
                     });
+                });
+            }
+
+            if (sourceNode && result.morphologicalRoot) {
+                this.addDerivedFrom(sourceNode.id, result.morphologicalRoot, language, 0.8, {
+                    source: 'resolver-morphology',
                 });
             }
 
@@ -462,6 +472,7 @@ class NLPKnowledgeGraph {
             confidence: payload.confidence || CONFIDENCE_STATES.UNKNOWN,
             domain: payload.domain || SEMANTIC_DOMAINS.GENERAL,
             relatedTerms: Array.isArray(payload.relatedTerms) ? payload.relatedTerms : [],
+            morphologicalRoot: payload.morphologicalRoot || null,
         };
     }
 
