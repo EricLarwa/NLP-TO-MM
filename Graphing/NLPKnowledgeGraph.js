@@ -27,16 +27,22 @@ class NLPKnowledgeGraph {
         };
     }
 
-    getOrCreateNode(word, language, domain = SEMANTIC_DOMAINS.GENERAL) {
+    getOrCreateNode(word, language, domain = SEMANTIC_DOMAINS.GENERAL, context = null) {
         const nodeId = this._generateNodeId(word, language);
 
         if (this.nodes.has(nodeId)) {
             const node = this.nodes.get(nodeId);
-            node.recordOccurrence();
+            node.recordOccurrence(context);
             return node;
         }
 
         const node = new KnowledgeGraphNode(nodeId, word, language, domain);
+        if (context) {
+            node.metadata.contextExamples.push({
+                context,
+                timestamp: new Date(),
+            });
+        }
         this.nodes.set(nodeId, node);
         this.statistics.totalNodesProcessed += 1;
         this.statistics.unresolvedNodes += 1;
@@ -97,7 +103,7 @@ class NLPKnowledgeGraph {
     }
 
     async resolveOOVWord(word, language, sourceContext = null) {
-        const node = this.getOrCreateNode(word, language);
+        const node = this.getOrCreateNode(word, language, SEMANTIC_DOMAINS.GENERAL, sourceContext);
 
         let result = await this._contextInference(word, language, sourceContext);
         if (result.success) {
@@ -155,6 +161,72 @@ class NLPKnowledgeGraph {
             stage: RESOLUTION_STAGES.MANUAL_REVIEW,
             confidence: CONFIDENCE_STATES.UNKNOWN,
             flaggedForReview: true,
+        };
+    }
+
+    async resolveOOVText(text, language = 'en', targetLanguage = 'fr') {
+        const detection = await this.detectOOVWords(text, language);
+        const resolutions = [];
+
+        for (const token of detection.oovTokens) {
+            const result = await this.resolveOOVWord(token.word, language, text);
+            const sourceNode = this.getNode(this._generateNodeId(token.word, language));
+            if (sourceNode) {
+                sourceNode.metadata.tokenInspection = token;
+            }
+
+            if (sourceNode && result.resolution) {
+                const targetNode = this.getOrCreateNode(
+                    result.resolution,
+                    targetLanguage,
+                    SEMANTIC_DOMAINS.GENERAL
+                );
+
+                this.updateNodeConfidence(
+                    targetNode.id,
+                    result.confidence,
+                    result.stage,
+                    result.resolution
+                );
+
+                this.addEdge(
+                    sourceNode.id,
+                    targetNode.id,
+                    EDGE_TYPES.TRANSLATES_TO,
+                    result.confidence === CONFIDENCE_STATES.VERIFIED ? 0.95 : 0.8,
+                    {
+                        resolutionStage: result.stage,
+                        confidence: result.confidence,
+                        source: 'oov-resolution',
+                    }
+                );
+            }
+
+            resolutions.push({
+                word: token.word,
+                language,
+                tokenInspection: token,
+                result,
+            });
+        }
+
+        const resolvedOOVCount = resolutions.filter(({ result }) => Boolean(result.resolution)).length;
+
+        return {
+            text,
+            language,
+            targetLanguage,
+            detection,
+            resolutions,
+            sigmaData: this.getSigmaGraphData(),
+            statistics: {
+                ...this.getStatistics(),
+                totalTokenCount: detection.totalTokenCount,
+                oovTokenCount: detection.oovTokenCount,
+                oovTokenRate: detection.oovTokenRate,
+                unresolvedOOVCount: detection.oovTokenCount - resolvedOOVCount,
+                resolvedOOVCount,
+            },
         };
     }
 
@@ -283,6 +355,7 @@ class NLPKnowledgeGraph {
                 domain: node.domain,
                 confidence: node.confidenceStatus,
                 occurrences: node.occurrenceCount,
+                tokenInspection: node.metadata.tokenInspection,
             },
         }));
 

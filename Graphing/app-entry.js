@@ -112,10 +112,14 @@ async function renderOrRefresh(liveData) {
 
     const { nodes, edges } = adapter.getSigmaGraphData();
     const stats = payloadData.statistics || {};
+    const oovSummary =
+        typeof stats.oovTokenCount === 'number'
+            ? ` | OOV: ${stats.oovTokenCount} (${stats.oovTokenRate ?? stats.unresolvedTokenRate ?? 0}%)`
+            : '';
     setStatus(
         `Loaded ${nodes.length} nodes / ${edges.length} edges. ` +
             `Resolved: ${stats.resolvedNodes ?? 'n/a'} | ` +
-            `Unresolved: ${stats.unresolvedNodes ?? 'n/a'}`
+            `Unresolved: ${stats.unresolvedNodes ?? 'n/a'}${oovSummary}`
     );
 }
 

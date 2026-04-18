@@ -37,32 +37,30 @@ async function main() {
     });
 
     const textArg = process.argv[2];
-    let samples;
     if (textArg) {
-        console.log(`Detecting OOV tokens: "${textArg}"`);
-        const tokenRes = await fetch(`${RESOLVER_BASE_URL}/detect-oov`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text: textArg, language: 'en' }),
-        });
-        if (!tokenRes.ok) throw new Error(`OOV detection failed with HTTP ${tokenRes.status}`);
-        const { tokens, oovTokens } = await tokenRes.json();
-        samples = oovTokens.map(({ word, pieces, reason }) => ({
-            word,
-            language: 'en',
-            context: textArg,
-            tokenInspection: { pieces, reason, isOov: true },
-        }));
-        console.log(`Tokens inspected: ${tokens.map(({ word }) => word).join(', ')}`);
-        console.log(`OOV words to resolve: ${samples.map(({ word }) => word).join(', ') || '(none)'}`);
-    } else {
-        samples = [
-            { word: 'computer', language: 'en', context: 'The computer runs our translation pipeline.' },
-            { word: 'language', language: 'en', context: 'Each language pair has different edge confidence.' },
-            { word: 'translation', language: 'en', context: 'Translation results should be persisted in graph form.' },
-            { word: 'Mariam', language: 'en', context: 'Mariam reviewed the unresolved terms.' },
-        ];
+        console.log(`Resolving OOV tokens: "${textArg}"`);
+        const output = {
+            createdAt: new Date().toISOString(),
+            source: 'live-resolver',
+            resolverBaseUrl: RESOLVER_BASE_URL,
+            inputText: textArg,
+            ...(await graph.resolveOOVText(textArg, 'en', 'fr')),
+        };
+
+        fs.writeFileSync(OUTPUT_PATH, JSON.stringify(output, null, 2), 'utf-8');
+
+        console.log(`Wrote ${OUTPUT_PATH}`);
+        console.log('Stats:', output.statistics);
+        return;
     }
+
+    let samples;
+    samples = [
+        { word: 'computer', language: 'en', context: 'The computer runs our translation pipeline.' },
+        { word: 'language', language: 'en', context: 'Each language pair has different edge confidence.' },
+        { word: 'translation', language: 'en', context: 'Translation results should be persisted in graph form.' },
+        { word: 'Mariam', language: 'en', context: 'Mariam reviewed the unresolved terms.' },
+    ];
 
     const resolutions = [];
 
