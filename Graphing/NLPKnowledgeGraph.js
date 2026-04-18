@@ -7,6 +7,14 @@ const {
     RESOLUTION_STAGES,
 } = require('./constants');
 
+const EDGE_COLORS = {
+    [EDGE_TYPES.TRANSLATES_TO]: '#4F8EF7',
+    [EDGE_TYPES.BELONGS_TO]: '#7E57C2',
+    [EDGE_TYPES.RELATED_TO]: '#26A69A',
+    [EDGE_TYPES.DERIVED_FROM]: '#8D6E63',
+    [EDGE_TYPES.CONFLICTS_WITH]: '#EF5350',
+};
+
 class NLPKnowledgeGraph {
     constructor(options = {}) {
         this.nodes = new Map();
@@ -81,6 +89,21 @@ class NLPKnowledgeGraph {
             return null;
         }
 
+        if (!Object.values(EDGE_TYPES).includes(edgeType)) {
+            console.warn(`Cannot create edge: unsupported edge type "${edgeType}"`);
+            return null;
+        }
+
+        const existingEdge = this._findEdge(sourceId, targetId, edgeType);
+        if (existingEdge) {
+            existingEdge.weight = Math.max(existingEdge.weight, Math.max(0, Math.min(1, weight)));
+            existingEdge.metadata = {
+                ...existingEdge.metadata,
+                ...metadata,
+            };
+            return existingEdge;
+        }
+
         const edgeId = `edge_${this.edgeIndex++}`;
         const edge = new KnowledgeGraphEdge(sourceId, targetId, edgeType, weight, metadata, edgeId);
         this.edges.set(edgeId, edge);
@@ -88,6 +111,120 @@ class NLPKnowledgeGraph {
         this._addEdgeToSigmaGraph(edgeId, edge);
 
         return edge;
+    }
+
+    addSemanticRelation(sourceId, targetId, edgeType, weight = 0.5, metadata = {}) {
+        return this.addEdge(sourceId, targetId, edgeType, weight, {
+            source: 'semantic-relation',
+            ...metadata,
+        });
+    }
+
+    addDomainMembership(nodeId, domain, weight = 1) {
+        const node = this.nodes.get(nodeId);
+        if (!node || !domain) return null;
+
+        const normalizedDomain = this._normalizeDomain(domain);
+        node.domain = normalizedDomain;
+
+        const domainNode = this.getOrCreateDomainNode(normalizedDomain);
+        return this.addSemanticRelation(node.id, domainNode.id, EDGE_TYPES.BELONGS_TO, weight, {
+            domain: normalizedDomain,
+        });
+    }
+
+    getOrCreateDomainNode(domain) {
+        const normalizedDomain = this._normalizeDomain(domain);
+        const nodeId = this._generateDomainNodeId(normalizedDomain);
+
+        if (this.nodes.has(nodeId)) {
+            return this.nodes.get(nodeId);
+        }
+
+        const node = new KnowledgeGraphNode(
+            nodeId,
+            normalizedDomain,
+            'domain',
+            normalizedDomain
+        );
+        node.confidenceStatus = CONFIDENCE_STATES.VERIFIED;
+        node.metadata.nodeType = 'semantic_domain';
+        this.nodes.set(nodeId, node);
+        this.statistics.totalNodesProcessed += 1;
+        this.statistics.resolvedNodes += 1;
+        this._updateResolutionRate();
+
+        return node;
+    }
+
+    addRelatedTerm(sourceId, relatedWord, language = null, weight = 0.6, metadata = {}) {
+        const source = this.nodes.get(sourceId);
+        if (!source || !relatedWord) return null;
+
+        const relatedNode = this.getOrCreateNode(
+            relatedWord,
+            language || source.language,
+            source.domain
+        );
+
+        return this.addSemanticRelation(source.id, relatedNode.id, EDGE_TYPES.RELATED_TO, weight, {
+            relation: 'semantic_neighbor',
+            ...metadata,
+        });
+    }
+
+    addDerivedFrom(sourceId, rootWord, language = null, weight = 0.8, metadata = {}) {
+        const source = this.nodes.get(sourceId);
+        if (!source || !rootWord) return null;
+
+        const rootNode = this.getOrCreateNode(
+            rootWord,
+            language || source.language,
+            source.domain
+        );
+        source.metadata.morphologicalRoot = rootWord;
+
+        return this.addSemanticRelation(source.id, rootNode.id, EDGE_TYPES.DERIVED_FROM, weight, {
+            root: rootWord,
+            ...metadata,
+        });
+    }
+
+    addTranslation(sourceId, targetWord, targetLanguage, confidence, stage, weight = 0.8, metadata = {}) {
+        const sourceNode = this.nodes.get(sourceId);
+        if (!sourceNode || !targetWord || !targetLanguage) return null;
+
+        const targetNode = this.getOrCreateNode(
+            targetWord,
+            targetLanguage,
+            metadata.domain || sourceNode.domain
+        );
+
+        this.updateNodeConfidence(targetNode.id, confidence, stage, targetWord);
+
+        const translationEdge = this.addEdge(
+            sourceNode.id,
+            targetNode.id,
+            EDGE_TYPES.TRANSLATES_TO,
+            weight,
+            {
+                resolutionStage: stage,
+                confidence,
+                source: 'translation-resolution',
+                ...metadata,
+            }
+        );
+
+        this._addConflictsForCompetingTranslations(sourceNode.id, targetNode.id, {
+            sourceWord: sourceNode.word,
+            targetLanguage,
+            resolutionStage: stage,
+        });
+
+        return {
+            targetNode,
+            translationEdge,
+        };
     }
 
     getEdgesByType(sourceId, edgeType) {
@@ -100,6 +237,18 @@ class NLPKnowledgeGraph {
         return this.getEdgesByType(nodeId, edgeType)
             .map(edge => this.nodes.get(edge.targetId))
             .filter(node => node !== undefined);
+    }
+
+    getSemanticRelations(nodeId = null) {
+        return Array.from(this.edges.values())
+            .filter(edge => !nodeId || edge.sourceId === nodeId || edge.targetId === nodeId)
+            .map(edge => ({
+                type: edge.type,
+                source: this.nodes.get(edge.sourceId),
+                target: this.nodes.get(edge.targetId),
+                weight: edge.weight,
+                metadata: edge.metadata,
+            }));
     }
 
     async resolveOOVWord(word, language, sourceContext = null) {
@@ -117,6 +266,9 @@ class NLPKnowledgeGraph {
                 resolution: result.translation,
                 stage: RESOLUTION_STAGES.CONTEXT_INFERENCE,
                 confidence: CONFIDENCE_STATES.INFERRED,
+                domain: result.domain,
+                relatedTerms: result.relatedTerms,
+                morphologicalRoot: result.morphologicalRoot,
             };
         }
 
@@ -132,6 +284,9 @@ class NLPKnowledgeGraph {
                 resolution: result.translation,
                 stage: RESOLUTION_STAGES.DICTIONARY_LOOKUP,
                 confidence: CONFIDENCE_STATES.VERIFIED,
+                domain: result.domain,
+                relatedTerms: result.relatedTerms,
+                morphologicalRoot: result.morphologicalRoot,
             };
         }
 
@@ -147,6 +302,9 @@ class NLPKnowledgeGraph {
                 resolution: result.translation,
                 stage: RESOLUTION_STAGES.TRANSLITERATION,
                 confidence: CONFIDENCE_STATES.INFERRED,
+                domain: result.domain,
+                relatedTerms: result.relatedTerms,
+                morphologicalRoot: result.morphologicalRoot,
             };
         }
 
@@ -161,6 +319,9 @@ class NLPKnowledgeGraph {
             stage: RESOLUTION_STAGES.MANUAL_REVIEW,
             confidence: CONFIDENCE_STATES.UNKNOWN,
             flaggedForReview: true,
+            domain: SEMANTIC_DOMAINS.GENERAL,
+            relatedTerms: [],
+            morphologicalRoot: null,
         };
     }
 
@@ -176,30 +337,39 @@ class NLPKnowledgeGraph {
             }
 
             if (sourceNode && result.resolution) {
-                const targetNode = this.getOrCreateNode(
+                this.addTranslation(
+                    sourceNode.id,
                     result.resolution,
                     targetLanguage,
-                    SEMANTIC_DOMAINS.GENERAL
-                );
-
-                this.updateNodeConfidence(
-                    targetNode.id,
                     result.confidence,
                     result.stage,
-                    result.resolution
-                );
-
-                this.addEdge(
-                    sourceNode.id,
-                    targetNode.id,
-                    EDGE_TYPES.TRANSLATES_TO,
                     result.confidence === CONFIDENCE_STATES.VERIFIED ? 0.95 : 0.8,
                     {
-                        resolutionStage: result.stage,
-                        confidence: result.confidence,
                         source: 'oov-resolution',
+                        domain: result.domain,
                     }
                 );
+            }
+
+            if (sourceNode && result.domain) {
+                this.addDomainMembership(sourceNode.id, result.domain);
+            }
+
+            if (sourceNode && Array.isArray(result.relatedTerms)) {
+                result.relatedTerms.forEach(term => {
+                    const relatedWord = typeof term === 'string' ? term : term.word;
+                    const relatedLanguage = typeof term === 'string' ? language : term.language || language;
+                    const relatedWeight = typeof term === 'string' ? 0.6 : term.weight || 0.6;
+                    this.addRelatedTerm(sourceNode.id, relatedWord, relatedLanguage, relatedWeight, {
+                        source: 'resolver-related-term',
+                    });
+                });
+            }
+
+            if (sourceNode && result.morphologicalRoot) {
+                this.addDerivedFrom(sourceNode.id, result.morphologicalRoot, language, 0.8, {
+                    source: 'resolver-morphology',
+                });
             }
 
             resolutions.push({
@@ -302,6 +472,7 @@ class NLPKnowledgeGraph {
             confidence: payload.confidence || CONFIDENCE_STATES.UNKNOWN,
             domain: payload.domain || SEMANTIC_DOMAINS.GENERAL,
             relatedTerms: Array.isArray(payload.relatedTerms) ? payload.relatedTerms : [],
+            morphologicalRoot: payload.morphologicalRoot || null,
         };
     }
 
@@ -367,6 +538,8 @@ class NLPKnowledgeGraph {
             weight: edge.weight,
             attributes: {
                 semanticType: edge.type,
+                color: EDGE_COLORS[edge.type],
+                relationGroup: edge.type,
                 ...edge.metadata,
             },
         }));
@@ -394,6 +567,8 @@ class NLPKnowledgeGraph {
     }
 
     getStatistics() {
+        this._updateResolutionRate();
+
         return {
             ...this.statistics,
             totalNodes: this.nodes.size,
@@ -434,6 +609,41 @@ class NLPKnowledgeGraph {
 
     _generateNodeId(word, language) {
         return `node_${language}_${word.toLowerCase().replace(/\s+/g, '_')}`;
+    }
+
+    _generateDomainNodeId(domain) {
+        return `domain_${this._normalizeDomain(domain)}`;
+    }
+
+    _normalizeDomain(domain) {
+        if (!domain || typeof domain !== 'string') {
+            return SEMANTIC_DOMAINS.GENERAL;
+        }
+
+        return domain.toLowerCase().replace(/\s+/g, '_');
+    }
+
+    _findEdge(sourceId, targetId, edgeType) {
+        return Array.from(this.edges.values()).find(
+            edge => edge.sourceId === sourceId && edge.targetId === targetId && edge.type === edgeType
+        );
+    }
+
+    _addConflictsForCompetingTranslations(sourceId, targetId, metadata = {}) {
+        this.getEdgesByType(sourceId, EDGE_TYPES.TRANSLATES_TO)
+            .filter(edge => edge.targetId !== targetId)
+            .forEach(edge => {
+                this.addSemanticRelation(
+                    targetId,
+                    edge.targetId,
+                    EDGE_TYPES.CONFLICTS_WITH,
+                    0.7,
+                    {
+                        reason: 'competing_translation',
+                        ...metadata,
+                    }
+                );
+            });
     }
 
     exportGraph() {

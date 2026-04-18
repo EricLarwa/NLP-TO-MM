@@ -12,6 +12,43 @@ MODEL_NAME = "Helsinki-NLP/opus-mt-en-fr"
 HOST = os.getenv("PY_MODEL_HOST", "127.0.0.1")
 PORT = int(os.getenv("PY_MODEL_PORT", "8000"))
 
+DOMAIN_KEYWORDS = {
+	"medical": {
+		"clinic", "clinical", "doctor", "dosage", "health", "hospital", "medical",
+		"medicine", "patient", "pharma", "therapy", "treatment", "vaccine",
+	},
+	"legal": {
+		"appeal", "case", "clause", "contract", "court", "evidence", "judge",
+		"law", "legal", "liability", "rights", "statute", "trial",
+	},
+	"technical": {
+		"algorithm", "api", "code", "computer", "data", "database", "graph",
+		"model", "network", "nlp", "pipeline", "python", "resolver", "software",
+		"token", "translation",
+	},
+	"slang": {
+		"bruh", "gonna", "kinda", "lol", "nah", "slang", "wanna", "yall",
+	},
+}
+
+RELATED_TERMS = {
+	"computer": ["model", "software", "data"],
+	"translation": ["language", "token", "model"],
+	"language": ["translation", "token", "corpus"],
+	"model": ["algorithm", "data", "training"],
+	"graph": ["node", "edge", "network"],
+	"token": ["vocabulary", "subword", "unknown"],
+}
+
+SUFFIX_RULES = (
+	("ization", "ize"),
+	("ation", "ate"),
+	("ing", ""),
+	("ed", ""),
+	("ies", "y"),
+	("s", ""),
+)
+
 tokenizer = MarianTokenizer.from_pretrained(MODEL_NAME)
 model = MarianMTModel.from_pretrained(MODEL_NAME)
 
@@ -44,8 +81,47 @@ def detect_oov_words(text):
 	return [inspect_token(word) for word in tokenize_words(text)]
 
 
+def infer_domain(word, source_context=None):
+	"""Infer a coarse semantic domain from the token and nearby context."""
+	context_words = set(token.lower() for token in tokenize_words(source_context or ""))
+	word_lower = word.lower()
+	for domain, keywords in DOMAIN_KEYWORDS.items():
+		if word_lower in keywords or context_words.intersection(keywords):
+			return domain
+	if word[:1].isupper():
+		return "proper_noun"
+	return "general"
+
+
+def infer_related_terms(word, source_context=None, limit=3):
+	"""Return lightweight semantic neighbors from known terms and sentence context."""
+	word_lower = word.lower()
+	related = list(RELATED_TERMS.get(word_lower, []))
+	context_words = [
+		token.lower()
+		for token in tokenize_words(source_context or "")
+		if token.lower() != word_lower
+	]
+	for token in context_words:
+		if token not in related:
+			related.append(token)
+	return related[:limit]
+
+
+def infer_morphological_root(word):
+	"""Infer a simple morphological root for graph lineage edges."""
+	word_lower = word.lower()
+	for suffix, replacement in SUFFIX_RULES:
+		if word_lower.endswith(suffix) and len(word_lower) > len(suffix) + 2:
+			return f"{word_lower[:-len(suffix)]}{replacement}"
+	return None
+
+
 def resolve_word(word, language="en", source_context=None, stage_hint="context_inference"):
 	translation = translate_text(word)
+	domain = infer_domain(word, source_context)
+	related_terms = infer_related_terms(word, source_context)
+	morphological_root = infer_morphological_root(word)
 
 	if translation and translation.strip() and translation.lower() != word.lower():
 		confidence = "inferred"
@@ -54,9 +130,10 @@ def resolve_word(word, language="en", source_context=None, stage_hint="context_i
 			"translation": translation,
 			"stage": stage_hint,
 			"confidence": confidence,
-			"domain": "general",
+			"domain": domain,
 			"language": language,
-			"relatedTerms": [],
+			"relatedTerms": related_terms,
+			"morphologicalRoot": morphological_root,
 			"evidence": {
 				"model": MODEL_NAME,
 				"sourceContext": source_context,
@@ -73,7 +150,8 @@ def resolve_word(word, language="en", source_context=None, stage_hint="context_i
 			"confidence": "inferred",
 			"domain": "proper_noun",
 			"language": language,
-			"relatedTerms": [],
+			"relatedTerms": related_terms,
+			"morphologicalRoot": morphological_root,
 			"evidence": {
 				"model": MODEL_NAME,
 				"sourceContext": source_context,
@@ -86,9 +164,10 @@ def resolve_word(word, language="en", source_context=None, stage_hint="context_i
 		"translation": None,
 		"stage": "manual_review",
 		"confidence": "unknown",
-		"domain": "general",
+		"domain": domain,
 		"language": language,
-		"relatedTerms": [],
+		"relatedTerms": related_terms,
+		"morphologicalRoot": morphological_root,
 		"evidence": {
 			"model": MODEL_NAME,
 			"sourceContext": source_context,
@@ -117,60 +196,125 @@ def build_sigma_graph_data(resolutions):
 		"inferred": "#FFA726",
 		"unknown": "#FF6B6B",
 	}
+	edge_color_map = {
+		"translates_to": "#4F8EF7",
+		"belongs_to": "#7E57C2",
+		"related_to": "#26A69A",
+		"derived_from": "#8D6E63",
+		"conflicts_with": "#EF5350",
+	}
 	nodes = []
 	edges = []
 	seen_ids = set()
+	seen_edges = set()
+
+	def add_node(node_id, label, size, color, attributes):
+		if node_id in seen_ids:
+			return
+		nodes.append({
+			"key": node_id,
+			"label": label,
+			"size": size,
+			"color": color,
+			"attributes": attributes,
+		})
+		seen_ids.add(node_id)
+
+	def add_edge(source, target, label, weight=0.8, attributes=None):
+		edge_key = f"edge_{label}_{source}_{target}"
+		if edge_key in seen_edges:
+			return
+		edges.append({
+			"key": edge_key,
+			"source": source,
+			"target": target,
+			"label": label,
+			"weight": weight,
+			"attributes": {
+				"semanticType": label,
+				"relationGroup": label,
+				"color": edge_color_map.get(label, "#999999"),
+				**(attributes or {}),
+			},
+		})
+		seen_edges.add(edge_key)
 
 	for item in resolutions:
 		word = item["word"]
 		lang = item.get("language", "en")
 		result = item["result"]
 		confidence = result.get("confidence", "unknown")
+		domain = result.get("domain", "general")
 
 		src_id = f"node_{lang}_{word.lower().replace(' ', '_')}"
-		if src_id not in seen_ids:
-			nodes.append({
-				"key": src_id,
-				"label": word,
-				"size": 10,
-				"color": color_map.get(confidence, "#FF6B6B"),
-				"attributes": {
-					"language": lang,
-					"domain": result.get("domain", "general"),
-					"confidence": confidence,
-					"occurrences": 1,
-				},
+		add_node(src_id, word, 10, color_map.get(confidence, "#FF6B6B"), {
+			"language": lang,
+			"domain": domain,
+			"confidence": confidence,
+			"occurrences": 1,
+			"tokenInspection": item.get("tokenInspection"),
+		})
+
+		domain_id = f"domain_{domain.lower().replace(' ', '_')}"
+		add_node(domain_id, domain, 9, "#7E57C2", {
+			"language": "domain",
+			"domain": domain,
+			"confidence": "verified",
+			"occurrences": 1,
+			"nodeType": "semantic_domain",
+		})
+		add_edge(src_id, domain_id, "belongs_to", 1, {"domain": domain})
+
+		for related_term in result.get("relatedTerms", []):
+			related_word = related_term["word"] if isinstance(related_term, dict) else related_term
+			related_lang = related_term.get("language", lang) if isinstance(related_term, dict) else lang
+			related_weight = related_term.get("weight", 0.6) if isinstance(related_term, dict) else 0.6
+			related_id = f"node_{related_lang}_{related_word.lower().replace(' ', '_')}"
+			add_node(related_id, related_word, 8, "#FF6B6B", {
+				"language": related_lang,
+				"domain": domain,
+				"confidence": "unknown",
+				"occurrences": 1,
 			})
-			seen_ids.add(src_id)
+			add_edge(src_id, related_id, "related_to", related_weight, {"relation": "semantic_neighbor"})
+
+		root = result.get("morphologicalRoot")
+		if root and root.lower() != word.lower():
+			root_id = f"node_{lang}_{root.lower().replace(' ', '_')}"
+			add_node(root_id, root, 8, "#FF6B6B", {
+				"language": lang,
+				"domain": domain,
+				"confidence": "unknown",
+				"occurrences": 1,
+			})
+			add_edge(src_id, root_id, "derived_from", 0.8, {"root": root})
 
 		if result.get("success") and result.get("translation"):
 			trans = result["translation"]
 			target_lang = "fr" if lang == "en" else lang
 			tgt_id = f"node_{target_lang}_{trans.lower().replace(' ', '_')}"
 
-			if tgt_id not in seen_ids:
-				nodes.append({
-					"key": tgt_id,
-					"label": trans,
-					"size": 10,
-					"color": color_map["inferred"],
-					"attributes": {
-						"language": target_lang,
-						"domain": result.get("domain", "general"),
-						"confidence": "inferred",
-						"occurrences": 1,
-					},
-				})
-				seen_ids.add(tgt_id)
-
-			edges.append({
-				"key": f"edge_{src_id}_{tgt_id}",
-				"source": src_id,
-				"target": tgt_id,
-				"label": "translates_to",
-				"weight": 0.8,
-				"attributes": {"semanticType": "translates_to"},
+			add_node(tgt_id, trans, 10, color_map["inferred"], {
+				"language": target_lang,
+				"domain": domain,
+				"confidence": "inferred",
+				"occurrences": 1,
 			})
+			add_edge(src_id, tgt_id, "translates_to", 0.8, {
+				"resolutionStage": result.get("stage"),
+				"confidence": confidence,
+			})
+
+			for prior_edge in list(edges):
+				if (
+					prior_edge["source"] == src_id and
+					prior_edge["label"] == "translates_to" and
+					prior_edge["target"] != tgt_id
+				):
+					add_edge(tgt_id, prior_edge["target"], "conflicts_with", 0.7, {
+						"reason": "competing_translation",
+						"sourceWord": word,
+					})
 
 	return {"nodes": nodes, "edges": edges}
 
@@ -316,6 +460,9 @@ class ModelRequestHandler(BaseHTTPRequestHandler):
 							"word": r["word"],
 							"translation": r["result"].get("translation"),
 							"success": r["result"].get("success"),
+							"domain": r["result"].get("domain"),
+							"relatedTerms": r["result"].get("relatedTerms", []),
+							"morphologicalRoot": r["result"].get("morphologicalRoot"),
 							"tokenInspection": r["tokenInspection"],
 						}
 						for r in resolutions
