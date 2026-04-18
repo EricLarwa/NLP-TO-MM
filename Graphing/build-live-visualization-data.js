@@ -37,26 +37,30 @@ async function main() {
     });
 
     const textArg = process.argv[2];
-    let samples;
     if (textArg) {
-        console.log(`Tokenizing: "${textArg}"`);
-        const tokenRes = await fetch(`${RESOLVER_BASE_URL}/tokenize`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text: textArg, language: 'en' }),
-        });
-        if (!tokenRes.ok) throw new Error(`Tokenize failed with HTTP ${tokenRes.status}`);
-        const { tokens } = await tokenRes.json();
-        samples = tokens.map(word => ({ word, language: 'en', context: textArg }));
-        console.log(`Words to resolve: ${tokens.join(', ')}`);
-    } else {
-        samples = [
-            { word: 'computer', language: 'en', context: 'The computer runs our translation pipeline.' },
-            { word: 'language', language: 'en', context: 'Each language pair has different edge confidence.' },
-            { word: 'translation', language: 'en', context: 'Translation results should be persisted in graph form.' },
-            { word: 'Mariam', language: 'en', context: 'Mariam reviewed the unresolved terms.' },
-        ];
+        console.log(`Resolving OOV tokens: "${textArg}"`);
+        const output = {
+            createdAt: new Date().toISOString(),
+            source: 'live-resolver',
+            resolverBaseUrl: RESOLVER_BASE_URL,
+            inputText: textArg,
+            ...(await graph.resolveOOVText(textArg, 'en', 'fr')),
+        };
+
+        fs.writeFileSync(OUTPUT_PATH, JSON.stringify(output, null, 2), 'utf-8');
+
+        console.log(`Wrote ${OUTPUT_PATH}`);
+        console.log('Stats:', output.statistics);
+        return;
     }
+
+    let samples;
+    samples = [
+        { word: 'computer', language: 'en', context: 'The computer runs our translation pipeline.' },
+        { word: 'language', language: 'en', context: 'Each language pair has different edge confidence.' },
+        { word: 'translation', language: 'en', context: 'Translation results should be persisted in graph form.' },
+        { word: 'Mariam', language: 'en', context: 'Mariam reviewed the unresolved terms.' },
+    ];
 
     const resolutions = [];
 
@@ -85,6 +89,7 @@ async function main() {
         createdAt: new Date().toISOString(),
         source: 'live-resolver',
         resolverBaseUrl: RESOLVER_BASE_URL,
+        inputText: textArg || null,
         resolutions,
         sigmaData: graph.getSigmaGraphData(),
         statistics: graph.getStatistics(),

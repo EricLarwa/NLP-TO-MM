@@ -27,16 +27,22 @@ class NLPKnowledgeGraph {
         };
     }
 
-    getOrCreateNode(word, language, domain = SEMANTIC_DOMAINS.GENERAL) {
+    getOrCreateNode(word, language, domain = SEMANTIC_DOMAINS.GENERAL, context = null) {
         const nodeId = this._generateNodeId(word, language);
 
         if (this.nodes.has(nodeId)) {
             const node = this.nodes.get(nodeId);
-            node.recordOccurrence();
+            node.recordOccurrence(context);
             return node;
         }
 
         const node = new KnowledgeGraphNode(nodeId, word, language, domain);
+        if (context) {
+            node.metadata.contextExamples.push({
+                context,
+                timestamp: new Date(),
+            });
+        }
         this.nodes.set(nodeId, node);
         this.statistics.totalNodesProcessed += 1;
         this.statistics.unresolvedNodes += 1;
@@ -97,7 +103,7 @@ class NLPKnowledgeGraph {
     }
 
     async resolveOOVWord(word, language, sourceContext = null) {
-        const node = this.getOrCreateNode(word, language);
+        const node = this.getOrCreateNode(word, language, SEMANTIC_DOMAINS.GENERAL, sourceContext);
 
         let result = await this._contextInference(word, language, sourceContext);
         if (result.success) {
@@ -158,6 +164,102 @@ class NLPKnowledgeGraph {
         };
     }
 
+    async resolveOOVText(text, language = 'en', targetLanguage = 'fr') {
+        const detection = await this.detectOOVWords(text, language);
+        const resolutions = [];
+
+        for (const token of detection.oovTokens) {
+            const result = await this.resolveOOVWord(token.word, language, text);
+            const sourceNode = this.getNode(this._generateNodeId(token.word, language));
+            if (sourceNode) {
+                sourceNode.metadata.tokenInspection = token;
+            }
+
+            if (sourceNode && result.resolution) {
+                const targetNode = this.getOrCreateNode(
+                    result.resolution,
+                    targetLanguage,
+                    SEMANTIC_DOMAINS.GENERAL
+                );
+
+                this.updateNodeConfidence(
+                    targetNode.id,
+                    result.confidence,
+                    result.stage,
+                    result.resolution
+                );
+
+                this.addEdge(
+                    sourceNode.id,
+                    targetNode.id,
+                    EDGE_TYPES.TRANSLATES_TO,
+                    result.confidence === CONFIDENCE_STATES.VERIFIED ? 0.95 : 0.8,
+                    {
+                        resolutionStage: result.stage,
+                        confidence: result.confidence,
+                        source: 'oov-resolution',
+                    }
+                );
+            }
+
+            resolutions.push({
+                word: token.word,
+                language,
+                tokenInspection: token,
+                result,
+            });
+        }
+
+        const resolvedOOVCount = resolutions.filter(({ result }) => Boolean(result.resolution)).length;
+
+        return {
+            text,
+            language,
+            targetLanguage,
+            detection,
+            resolutions,
+            sigmaData: this.getSigmaGraphData(),
+            statistics: {
+                ...this.getStatistics(),
+                totalTokenCount: detection.totalTokenCount,
+                oovTokenCount: detection.oovTokenCount,
+                oovTokenRate: detection.oovTokenRate,
+                unresolvedOOVCount: detection.oovTokenCount - resolvedOOVCount,
+                resolvedOOVCount,
+            },
+        };
+    }
+
+    async detectOOVWords(text, language = 'en') {
+        if (!text || typeof text !== 'string') {
+            return {
+                tokens: [],
+                oovTokens: [],
+                totalTokenCount: 0,
+                oovTokenCount: 0,
+                oovTokenRate: 0,
+                unresolvedTokenRate: 0,
+            };
+        }
+
+        const result = await this._callPythonResolverEndpoint('/detect-oov', {
+            text,
+            language,
+        });
+
+        return {
+            tokens: Array.isArray(result.tokens) ? result.tokens : [],
+            oovTokens: Array.isArray(result.oovTokens) ? result.oovTokens : [],
+            totalTokenCount: result.totalTokenCount || 0,
+            oovTokenCount: result.oovTokenCount || 0,
+            oovTokenRate: result.oovTokenRate || result.unresolvedTokenRate || 0,
+            unresolvedTokenRate: result.unresolvedTokenRate || 0,
+            model: result.model || null,
+            unkToken: result.unkToken || null,
+            unkTokenId: result.unkTokenId ?? null,
+        };
+    }
+
     async _contextInference(word, language, context) {
         return this._callPythonResolver(
             RESOLUTION_STAGES.CONTEXT_INFERENCE,
@@ -186,46 +288,51 @@ class NLPKnowledgeGraph {
     }
 
     async _callPythonResolver(stageHint, word, language, sourceContext) {
+        const payload = await this._callPythonResolverEndpoint('/resolve', {
+            word,
+            language,
+            sourceContext,
+            stageHint,
+        });
+
+        return {
+            success: Boolean(payload.success),
+            translation: payload.translation || null,
+            stage: payload.stage || stageHint,
+            confidence: payload.confidence || CONFIDENCE_STATES.UNKNOWN,
+            domain: payload.domain || SEMANTIC_DOMAINS.GENERAL,
+            relatedTerms: Array.isArray(payload.relatedTerms) ? payload.relatedTerms : [],
+        };
+    }
+
+    async _callPythonResolverEndpoint(path, body) {
         if (typeof fetch !== 'function') {
             console.warn('Global fetch is unavailable. Python resolver call skipped.');
-            return { success: false };
+            return {};
         }
 
         const controller = new AbortController();
         const timeoutHandle = setTimeout(() => controller.abort(), this.pythonResolverTimeoutMs);
 
         try {
-            const response = await fetch(`${this.pythonResolverUrl}/resolve`, {
+            const response = await fetch(`${this.pythonResolverUrl}${path}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    word,
-                    language,
-                    sourceContext,
-                    stageHint,
-                }),
+                body: JSON.stringify(body),
                 signal: controller.signal,
             });
 
             if (!response.ok) {
                 console.warn(`Python resolver returned ${response.status}`);
-                return { success: false };
+                return {};
             }
 
-            const payload = await response.json();
-            return {
-                success: Boolean(payload.success),
-                translation: payload.translation || null,
-                stage: payload.stage || stageHint,
-                confidence: payload.confidence || CONFIDENCE_STATES.UNKNOWN,
-                domain: payload.domain || SEMANTIC_DOMAINS.GENERAL,
-                relatedTerms: Array.isArray(payload.relatedTerms) ? payload.relatedTerms : [],
-            };
+            return response.json();
         } catch (error) {
             console.warn(`Python resolver request failed: ${error.message}`);
-            return { success: false };
+            return {};
         } finally {
             clearTimeout(timeoutHandle);
         }
@@ -248,6 +355,7 @@ class NLPKnowledgeGraph {
                 domain: node.domain,
                 confidence: node.confidenceStatus,
                 occurrences: node.occurrenceCount,
+                tokenInspection: node.metadata.tokenInspection,
             },
         }));
 
