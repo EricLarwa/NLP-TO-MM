@@ -2,7 +2,6 @@ const fs = require('fs');
 const path = require('path');
 const {
     NLPKnowledgeGraph,
-    EDGE_TYPES,
     CONFIDENCE_STATES,
     RESOLUTION_STAGES,
 } = require('./index');
@@ -24,7 +23,26 @@ function main() {
         RESOLUTION_STAGES.DICTIONARY_LOOKUP,
         'ordinateur'
     );
-    graph.addEdge(computer.id, ordinateur.id, EDGE_TYPES.TRANSLATES_TO, 0.95);
+    graph.addTranslation(
+        computer.id,
+        'ordinateur',
+        'fr',
+        CONFIDENCE_STATES.VERIFIED,
+        RESOLUTION_STAGES.DICTIONARY_LOOKUP,
+        0.95,
+        { source: 'sample-data' }
+    );
+    graph.addTranslation(
+        computer.id,
+        'calculateur',
+        'fr',
+        CONFIDENCE_STATES.INFERRED,
+        RESOLUTION_STAGES.CONTEXT_INFERENCE,
+        0.55,
+        { source: 'sample-data', note: 'alternate translation for conflict demo' }
+    );
+    graph.addDomainMembership(computer.id, 'technical');
+    graph.addRelatedTerm(computer.id, 'model', 'en', 0.7, { source: 'sample-data' });
 
     const language = graph.getOrCreateNode('language', 'en');
     const langue = graph.getOrCreateNode('langue', 'fr');
@@ -40,7 +58,17 @@ function main() {
         RESOLUTION_STAGES.DICTIONARY_LOOKUP,
         'langue'
     );
-    graph.addEdge(language.id, langue.id, EDGE_TYPES.TRANSLATES_TO, 0.9);
+    graph.addTranslation(
+        language.id,
+        'langue',
+        'fr',
+        CONFIDENCE_STATES.VERIFIED,
+        RESOLUTION_STAGES.DICTIONARY_LOOKUP,
+        0.9,
+        { source: 'sample-data' }
+    );
+    graph.addDomainMembership(language.id, 'general');
+    graph.addDerivedFrom(language.id, 'lang', 'en', 0.75, { source: 'sample-data' });
 
     const unresolved = graph.getOrCreateNode('Mariam', 'en');
     graph.updateNodeConfidence(

@@ -1,49 +1,5 @@
 {
-  "createdAt": "2026-04-16T13:08:47.198Z",
-  "source": "live-resolver",
-  "resolverBaseUrl": "http://127.0.0.1:8000",
-  "resolutions": [
-    {
-      "word": "computer",
-      "language": "en",
-      "context": "The computer runs our translation pipeline.",
-      "result": {
-        "resolution": "ordinateur",
-        "stage": "context_inference",
-        "confidence": "inferred"
-      }
-    },
-    {
-      "word": "language",
-      "language": "en",
-      "context": "Each language pair has different edge confidence.",
-      "result": {
-        "resolution": "langue",
-        "stage": "context_inference",
-        "confidence": "inferred"
-      }
-    },
-    {
-      "word": "translation",
-      "language": "en",
-      "context": "Translation results should be persisted in graph form.",
-      "result": {
-        "resolution": "traduction",
-        "stage": "context_inference",
-        "confidence": "inferred"
-      }
-    },
-    {
-      "word": "Mariam",
-      "language": "en",
-      "context": "Mariam reviewed the unresolved terms.",
-      "result": {
-        "resolution": "Mariam",
-        "stage": "transliteration",
-        "confidence": "inferred"
-      }
-    }
-  ],
+  "createdAt": "2026-04-18T23:02:39.955Z",
   "sigmaData": {
     "nodes": [
       {
@@ -53,7 +9,7 @@
         "color": "#FFA726",
         "attributes": {
           "language": "en",
-          "domain": "general",
+          "domain": "technical",
           "confidence": "inferred",
           "occurrences": 1
         }
@@ -61,11 +17,47 @@
       {
         "key": "node_fr_ordinateur",
         "label": "ordinateur",
-        "size": 7.079441541679836,
-        "color": "#FF6B6B",
+        "size": 8.29583686600433,
+        "color": "#66BB6A",
         "attributes": {
           "language": "fr",
           "domain": "general",
+          "confidence": "verified",
+          "occurrences": 2
+        }
+      },
+      {
+        "key": "node_fr_calculateur",
+        "label": "calculateur",
+        "size": 7.079441541679836,
+        "color": "#FFA726",
+        "attributes": {
+          "language": "fr",
+          "domain": "general",
+          "confidence": "inferred",
+          "occurrences": 1
+        }
+      },
+      {
+        "key": "domain_technical",
+        "label": "technical",
+        "size": 7.079441541679836,
+        "color": "#66BB6A",
+        "attributes": {
+          "language": "domain",
+          "domain": "technical",
+          "confidence": "verified",
+          "occurrences": 1
+        }
+      },
+      {
+        "key": "node_en_model",
+        "label": "model",
+        "size": 7.079441541679836,
+        "color": "#FF6B6B",
+        "attributes": {
+          "language": "en",
+          "domain": "technical",
           "confidence": "unknown",
           "occurrences": 1
         }
@@ -85,34 +77,34 @@
       {
         "key": "node_fr_langue",
         "label": "langue",
-        "size": 7.079441541679836,
-        "color": "#FF6B6B",
+        "size": 8.29583686600433,
+        "color": "#66BB6A",
         "attributes": {
           "language": "fr",
           "domain": "general",
-          "confidence": "unknown",
+          "confidence": "verified",
+          "occurrences": 2
+        }
+      },
+      {
+        "key": "domain_general",
+        "label": "general",
+        "size": 7.079441541679836,
+        "color": "#66BB6A",
+        "attributes": {
+          "language": "domain",
+          "domain": "general",
+          "confidence": "verified",
           "occurrences": 1
         }
       },
       {
-        "key": "node_en_translation",
-        "label": "translation",
+        "key": "node_en_lang",
+        "label": "lang",
         "size": 7.079441541679836,
-        "color": "#FFA726",
+        "color": "#FF6B6B",
         "attributes": {
           "language": "en",
-          "domain": "general",
-          "confidence": "inferred",
-          "occurrences": 1
-        }
-      },
-      {
-        "key": "node_fr_traduction",
-        "label": "traduction",
-        "size": 7.079441541679836,
-        "color": "#FF6B6B",
-        "attributes": {
-          "language": "fr",
           "domain": "general",
           "confidence": "unknown",
           "occurrences": 1
@@ -122,21 +114,9 @@
         "key": "node_en_mariam",
         "label": "Mariam",
         "size": 7.079441541679836,
-        "color": "#FFA726",
-        "attributes": {
-          "language": "en",
-          "domain": "general",
-          "confidence": "inferred",
-          "occurrences": 1
-        }
-      },
-      {
-        "key": "node_fr_mariam",
-        "label": "Mariam",
-        "size": 7.079441541679836,
         "color": "#FF6B6B",
         "attributes": {
-          "language": "fr",
+          "language": "en",
           "domain": "general",
           "confidence": "unknown",
           "occurrences": 1
@@ -145,53 +125,132 @@
     ],
     "edges": [
       {
-        "key": "edge_node_en_computer_node_fr_ordinateur",
+        "key": "edge_0",
         "source": "node_en_computer",
         "target": "node_fr_ordinateur",
         "label": "translates_to",
         "weight": 0.95,
         "attributes": {
-          "semanticType": "translates_to"
+          "semanticType": "translates_to",
+          "color": "#4F8EF7",
+          "relationGroup": "translates_to",
+          "resolutionStage": "dictionary_lookup",
+          "confidence": "verified",
+          "source": "sample-data"
         }
       },
       {
-        "key": "edge_node_en_language_node_fr_langue",
+        "key": "edge_1",
+        "source": "node_en_computer",
+        "target": "node_fr_calculateur",
+        "label": "translates_to",
+        "weight": 0.55,
+        "attributes": {
+          "semanticType": "translates_to",
+          "color": "#4F8EF7",
+          "relationGroup": "translates_to",
+          "resolutionStage": "context_inference",
+          "confidence": "inferred",
+          "source": "sample-data",
+          "note": "alternate translation for conflict demo"
+        }
+      },
+      {
+        "key": "edge_2",
+        "source": "node_fr_calculateur",
+        "target": "node_fr_ordinateur",
+        "label": "conflicts_with",
+        "weight": 0.7,
+        "attributes": {
+          "semanticType": "conflicts_with",
+          "color": "#EF5350",
+          "relationGroup": "conflicts_with",
+          "source": "semantic-relation",
+          "reason": "competing_translation",
+          "sourceWord": "computer",
+          "targetLanguage": "fr",
+          "resolutionStage": "context_inference"
+        }
+      },
+      {
+        "key": "edge_3",
+        "source": "node_en_computer",
+        "target": "domain_technical",
+        "label": "belongs_to",
+        "weight": 1,
+        "attributes": {
+          "semanticType": "belongs_to",
+          "color": "#7E57C2",
+          "relationGroup": "belongs_to",
+          "source": "semantic-relation",
+          "domain": "technical"
+        }
+      },
+      {
+        "key": "edge_4",
+        "source": "node_en_computer",
+        "target": "node_en_model",
+        "label": "related_to",
+        "weight": 0.7,
+        "attributes": {
+          "semanticType": "related_to",
+          "color": "#26A69A",
+          "relationGroup": "related_to",
+          "source": "sample-data",
+          "relation": "semantic_neighbor"
+        }
+      },
+      {
+        "key": "edge_5",
         "source": "node_en_language",
         "target": "node_fr_langue",
         "label": "translates_to",
-        "weight": 0.95,
+        "weight": 0.9,
         "attributes": {
-          "semanticType": "translates_to"
+          "semanticType": "translates_to",
+          "color": "#4F8EF7",
+          "relationGroup": "translates_to",
+          "resolutionStage": "dictionary_lookup",
+          "confidence": "verified",
+          "source": "sample-data"
         }
       },
       {
-        "key": "edge_node_en_translation_node_fr_traduction",
-        "source": "node_en_translation",
-        "target": "node_fr_traduction",
-        "label": "translates_to",
-        "weight": 0.95,
+        "key": "edge_6",
+        "source": "node_en_language",
+        "target": "domain_general",
+        "label": "belongs_to",
+        "weight": 1,
         "attributes": {
-          "semanticType": "translates_to"
+          "semanticType": "belongs_to",
+          "color": "#7E57C2",
+          "relationGroup": "belongs_to",
+          "source": "semantic-relation",
+          "domain": "general"
         }
       },
       {
-        "key": "edge_node_en_mariam_node_fr_mariam",
-        "source": "node_en_mariam",
-        "target": "node_fr_mariam",
-        "label": "translates_to",
-        "weight": 0.95,
+        "key": "edge_7",
+        "source": "node_en_language",
+        "target": "node_en_lang",
+        "label": "derived_from",
+        "weight": 0.75,
         "attributes": {
-          "semanticType": "translates_to"
+          "semanticType": "derived_from",
+          "color": "#8D6E63",
+          "relationGroup": "derived_from",
+          "source": "sample-data",
+          "root": "lang"
         }
       }
     ]
   },
   "statistics": {
-    "totalNodesProcessed": 8,
-    "resolvedNodes": 4,
-    "unresolvedNodes": 4,
-    "resolutionSuccessRate": 57.14,
-    "totalNodes": 8,
-    "totalEdges": 4
+    "totalNodesProcessed": 10,
+    "resolvedNodes": 7,
+    "unresolvedNodes": 3,
+    "resolutionSuccessRate": 70,
+    "totalNodes": 10,
+    "totalEdges": 8
   }
 }
