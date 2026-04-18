@@ -23,3 +23,10 @@
 - Updated Python-generated Sigma payloads so direct `/translate-sentence` responses include semantic relation groups, relation colors, domain nodes, related-term edges, and derived-root edges.
 - Wired resolver `morphologicalRoot` values into `Graphing/NLPKnowledgeGraph.js` so OOV graph resolution can create `derived_from` edges.
 - Returned semantic metadata in `/translate-sentence` resolution summaries and constrained root inference to avoid noisy roots like `computer -> comput`.
+
+## Evaluation
+
+- Added `Evaluation/evaluator.js` for dependency-light automated evaluation of BLEU-style translation quality, OOV detection precision/recall/F1, OOV resolution metrics, graph growth, graph connectivity, edge-type distribution, domain coverage, and graph integrity.
+- Added unresolved-token rate reduction support when evaluation records include a baseline unresolved/OOV rate.
+- Added `Evaluation/sample-evaluation-set.json` as an example input file and `Evaluation/README.md` with the evaluation schema and run commands.
+- Added optional JSON report output to `Evaluation/evaluator.js` for archiving evaluation results.
