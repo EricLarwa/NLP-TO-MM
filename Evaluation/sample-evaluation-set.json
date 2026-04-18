@@ -1,0 +1,163 @@
+{
+  "records": [
+    {
+      "source": "The computer runs the translation model.",
+      "reference": "L'ordinateur execute le modele de traduction.",
+      "prediction": "L'ordinateur execute le modele de traduction.",
+      "baselineUnresolvedTokenRate": 50,
+      "expectedOOV": ["computer", "translation"],
+      "detectedOOV": ["computer", "translation"],
+      "expectedTranslations": {
+        "computer": "ordinateur",
+        "translation": "traduction"
+      },
+      "resolutions": [
+        {
+          "word": "computer",
+          "translation": "ordinateur",
+          "success": true
+        },
+        {
+          "word": "translation",
+          "translation": "traduction",
+          "success": true
+        }
+      ],
+      "sigmaData": {
+        "nodes": [
+          {
+            "key": "node_en_computer",
+            "label": "computer",
+            "attributes": {
+              "language": "en",
+              "domain": "technical",
+              "confidence": "inferred"
+            }
+          },
+          {
+            "key": "node_fr_ordinateur",
+            "label": "ordinateur",
+            "attributes": {
+              "language": "fr",
+              "domain": "technical",
+              "confidence": "verified"
+            }
+          },
+          {
+            "key": "domain_technical",
+            "label": "technical",
+            "attributes": {
+              "language": "domain",
+              "domain": "technical",
+              "confidence": "verified"
+            }
+          }
+        ],
+        "edges": [
+          {
+            "key": "edge_translates_to_node_en_computer_node_fr_ordinateur",
+            "source": "node_en_computer",
+            "target": "node_fr_ordinateur",
+            "label": "translates_to",
+            "attributes": {
+              "semanticType": "translates_to"
+            }
+          },
+          {
+            "key": "edge_belongs_to_node_en_computer_domain_technical",
+            "source": "node_en_computer",
+            "target": "domain_technical",
+            "label": "belongs_to",
+            "attributes": {
+              "semanticType": "belongs_to"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "source": "Mariam reviewed the legal contract.",
+      "reference": "Mariam a examine le contrat juridique.",
+      "prediction": "Mariam a examine le contrat juridique.",
+      "baselineUnresolvedTokenRate": 40,
+      "expectedOOV": ["Mariam", "contract"],
+      "detectedOOV": ["Mariam", "contract"],
+      "expectedTranslations": {
+        "mariam": "Mariam",
+        "contract": "contrat"
+      },
+      "resolutions": [
+        {
+          "word": "Mariam",
+          "translation": "Mariam",
+          "success": true
+        },
+        {
+          "word": "contract",
+          "translation": "contrat",
+          "success": true
+        }
+      ],
+      "sigmaData": {
+        "nodes": [
+          {
+            "key": "node_en_Mariam",
+            "label": "Mariam",
+            "attributes": {
+              "language": "en",
+              "domain": "proper_noun",
+              "confidence": "inferred"
+            }
+          },
+          {
+            "key": "node_fr_Mariam",
+            "label": "Mariam",
+            "attributes": {
+              "language": "fr",
+              "domain": "proper_noun",
+              "confidence": "inferred"
+            }
+          },
+          {
+            "key": "node_en_contract",
+            "label": "contract",
+            "attributes": {
+              "language": "en",
+              "domain": "legal",
+              "confidence": "inferred"
+            }
+          },
+          {
+            "key": "domain_legal",
+            "label": "legal",
+            "attributes": {
+              "language": "domain",
+              "domain": "legal",
+              "confidence": "verified"
+            }
+          }
+        ],
+        "edges": [
+          {
+            "key": "edge_translates_to_node_en_Mariam_node_fr_Mariam",
+            "source": "node_en_Mariam",
+            "target": "node_fr_Mariam",
+            "label": "translates_to",
+            "attributes": {
+              "semanticType": "translates_to"
+            }
+          },
+          {
+            "key": "edge_belongs_to_node_en_contract_domain_legal",
+            "source": "node_en_contract",
+            "target": "domain_legal",
+            "label": "belongs_to",
+            "attributes": {
+              "semanticType": "belongs_to"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
