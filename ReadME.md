@@ -1,5 +1,5 @@
 
-A neural machine translation system that handles unknown vocabulary by learning from it. When the model encounters a word it doesn't recognizeit attempts to resolve it and stores the result in a growing knowledge graph. The more it's used, the more it knows.
+A neural machine translation system that handles unknown vocabulary by learning from it. When the model encounters a word it doesn't recognize, it doesn't drop it — it attempts to resolve it and stores the result in a growing knowledge graph. The more it's used, the more it knows.
 
 
 ## What It Does
@@ -72,4 +72,3 @@ All issues are tracked on the project board. Check there before starting new wor
 ## Status
 
 Early development. Core translation interface and OOV detection pipeline are in progress.
-
