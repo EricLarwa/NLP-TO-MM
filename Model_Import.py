@@ -22,6 +22,28 @@ def translate_text(text):
 	return tokenizer.batch_decode(generated, skip_special_tokens=True)[0]
 
 
+def inspect_token(word):
+	"""Return tokenizer-level OOV details for one source token."""
+	pieces = tokenizer.tokenize(word)
+	token_ids = tokenizer.convert_tokens_to_ids(pieces)
+	unk_token = tokenizer.unk_token
+	unk_token_id = tokenizer.unk_token_id
+	is_oov = any(piece == unk_token for piece in pieces) or any(token_id == unk_token_id for token_id in token_ids)
+
+	return {
+		"word": word,
+		"pieces": pieces,
+		"tokenIds": token_ids,
+		"isOov": is_oov,
+		"reason": "unknown_token" if is_oov else "in_vocabulary",
+	}
+
+
+def detect_oov_words(text):
+	"""Extract unique words and classify them using the Marian tokenizer vocabulary."""
+	return [inspect_token(word) for word in tokenize_words(text)]
+
+
 def resolve_word(word, language="en", source_context=None, stage_hint="context_inference"):
 	translation = translate_text(word)
 
@@ -38,6 +60,7 @@ def resolve_word(word, language="en", source_context=None, stage_hint="context_i
 			"evidence": {
 				"model": MODEL_NAME,
 				"sourceContext": source_context,
+				"tokenInspection": inspect_token(word),
 			},
 		}
 
@@ -54,6 +77,7 @@ def resolve_word(word, language="en", source_context=None, stage_hint="context_i
 			"evidence": {
 				"model": MODEL_NAME,
 				"sourceContext": source_context,
+				"tokenInspection": inspect_token(word),
 			},
 		}
 
@@ -68,6 +92,7 @@ def resolve_word(word, language="en", source_context=None, stage_hint="context_i
 		"evidence": {
 			"model": MODEL_NAME,
 			"sourceContext": source_context,
+			"tokenInspection": inspect_token(word),
 		},
 	}
 
@@ -176,6 +201,8 @@ class ModelRequestHandler(BaseHTTPRequestHandler):
 				{
 					"status": "ok",
 					"model": MODEL_NAME,
+					"unkToken": tokenizer.unk_token,
+					"unkTokenId": tokenizer.unk_token_id,
 				},
 			)
 			return
@@ -184,7 +211,7 @@ class ModelRequestHandler(BaseHTTPRequestHandler):
 
 	def do_POST(self):
 		route_path = self._get_route_path()
-		if route_path not in ("/resolve", "/tokenize", "/translate-sentence"):
+		if route_path not in ("/resolve", "/tokenize", "/detect-oov", "/translate-sentence"):
 			self._write_json(404, {"error": "Route not found", "path": route_path})
 			return
 
@@ -224,34 +251,73 @@ class ModelRequestHandler(BaseHTTPRequestHandler):
 				words = tokenize_words(text.strip())
 				self._write_json(200, {"tokens": words, "count": len(words)})
 
+			elif route_path == "/detect-oov":
+				text = payload.get("text", "")
+				if not isinstance(text, str) or not text.strip():
+					self._write_json(400, {"error": "'text' must be a non-empty string"})
+					return
+				detections = detect_oov_words(text.strip())
+				oov_tokens = [item for item in detections if item["isOov"]]
+				oov_token_rate = round(len(oov_tokens) / len(detections) * 100, 2) if detections else 0
+				self._write_json(200, {
+					"tokens": detections,
+					"oovTokens": oov_tokens,
+					"totalTokenCount": len(detections),
+					"oovTokenCount": len(oov_tokens),
+					"oovTokenRate": oov_token_rate,
+					"unresolvedTokenRate": oov_token_rate,
+					"model": MODEL_NAME,
+					"unkToken": tokenizer.unk_token,
+					"unkTokenId": tokenizer.unk_token_id,
+				})
+
 			elif route_path == "/translate-sentence":
 				text = payload.get("text", "")
 				language = payload.get("language", "en")
 				if not isinstance(text, str) or not text.strip():
 					self._write_json(400, {"error": "'text' must be a non-empty string"})
 					return
-				words = tokenize_words(text.strip())
+				token_detections = detect_oov_words(text.strip())
+				words = [item["word"] for item in token_detections if item["isOov"]]
 				resolutions = []
 				resolved_count = 0
 				for word in words:
 					result = resolve_word(word, language, text.strip())
-					resolutions.append({"word": word, "language": language, "result": result})
+					resolutions.append({
+						"word": word,
+						"language": language,
+						"tokenInspection": inspect_token(word),
+						"result": result,
+					})
 					if result.get("success"):
 						resolved_count += 1
 				sigma_data = build_sigma_graph_data(resolutions)
-				total = len(words)
+				total = len(token_detections)
+				oov_total = len(words)
+				oov_token_rate = round(oov_total / total * 100, 2) if total else 0
 				self._write_json(200, {
+					"translation": translate_text(text.strip()),
+					"tokens": token_detections,
+					"oovTokens": [item for item in token_detections if item["isOov"]],
 					"sigmaData": sigma_data,
 					"statistics": {
 						"totalNodesProcessed": total,
 						"resolvedNodes": resolved_count,
-						"unresolvedNodes": total - resolved_count,
-						"resolutionSuccessRate": round(resolved_count / total * 100, 2) if total else 0,
+						"unresolvedNodes": oov_total - resolved_count,
+						"oovTokenCount": oov_total,
+						"oovTokenRate": oov_token_rate,
+						"unresolvedTokenRate": oov_token_rate,
+						"resolutionSuccessRate": round(resolved_count / oov_total * 100, 2) if oov_total else 100,
 						"totalNodes": len(sigma_data["nodes"]),
 						"totalEdges": len(sigma_data["edges"]),
 					},
 					"resolutions": [
-						{"word": r["word"], "translation": r["result"].get("translation"), "success": r["result"].get("success")}
+						{
+							"word": r["word"],
+							"translation": r["result"].get("translation"),
+							"success": r["result"].get("success"),
+							"tokenInspection": r["tokenInspection"],
+						}
 						for r in resolutions
 					],
 					"source": "live-sentence",

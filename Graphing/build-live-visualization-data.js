@@ -39,16 +39,22 @@ async function main() {
     const textArg = process.argv[2];
     let samples;
     if (textArg) {
-        console.log(`Tokenizing: "${textArg}"`);
-        const tokenRes = await fetch(`${RESOLVER_BASE_URL}/tokenize`, {
+        console.log(`Detecting OOV tokens: "${textArg}"`);
+        const tokenRes = await fetch(`${RESOLVER_BASE_URL}/detect-oov`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ text: textArg, language: 'en' }),
         });
-        if (!tokenRes.ok) throw new Error(`Tokenize failed with HTTP ${tokenRes.status}`);
-        const { tokens } = await tokenRes.json();
-        samples = tokens.map(word => ({ word, language: 'en', context: textArg }));
-        console.log(`Words to resolve: ${tokens.join(', ')}`);
+        if (!tokenRes.ok) throw new Error(`OOV detection failed with HTTP ${tokenRes.status}`);
+        const { tokens, oovTokens } = await tokenRes.json();
+        samples = oovTokens.map(({ word, pieces, reason }) => ({
+            word,
+            language: 'en',
+            context: textArg,
+            tokenInspection: { pieces, reason, isOov: true },
+        }));
+        console.log(`Tokens inspected: ${tokens.map(({ word }) => word).join(', ')}`);
+        console.log(`OOV words to resolve: ${samples.map(({ word }) => word).join(', ') || '(none)'}`);
     } else {
         samples = [
             { word: 'computer', language: 'en', context: 'The computer runs our translation pipeline.' },
@@ -85,6 +91,7 @@ async function main() {
         createdAt: new Date().toISOString(),
         source: 'live-resolver',
         resolverBaseUrl: RESOLVER_BASE_URL,
+        inputText: textArg || null,
         resolutions,
         sigmaData: graph.getSigmaGraphData(),
         statistics: graph.getStatistics(),

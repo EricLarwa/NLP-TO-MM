@@ -158,6 +158,36 @@ class NLPKnowledgeGraph {
         };
     }
 
+    async detectOOVWords(text, language = 'en') {
+        if (!text || typeof text !== 'string') {
+            return {
+                tokens: [],
+                oovTokens: [],
+                totalTokenCount: 0,
+                oovTokenCount: 0,
+                oovTokenRate: 0,
+                unresolvedTokenRate: 0,
+            };
+        }
+
+        const result = await this._callPythonResolverEndpoint('/detect-oov', {
+            text,
+            language,
+        });
+
+        return {
+            tokens: Array.isArray(result.tokens) ? result.tokens : [],
+            oovTokens: Array.isArray(result.oovTokens) ? result.oovTokens : [],
+            totalTokenCount: result.totalTokenCount || 0,
+            oovTokenCount: result.oovTokenCount || 0,
+            oovTokenRate: result.oovTokenRate || result.unresolvedTokenRate || 0,
+            unresolvedTokenRate: result.unresolvedTokenRate || 0,
+            model: result.model || null,
+            unkToken: result.unkToken || null,
+            unkTokenId: result.unkTokenId ?? null,
+        };
+    }
+
     async _contextInference(word, language, context) {
         return this._callPythonResolver(
             RESOLUTION_STAGES.CONTEXT_INFERENCE,
@@ -186,46 +216,51 @@ class NLPKnowledgeGraph {
     }
 
     async _callPythonResolver(stageHint, word, language, sourceContext) {
+        const payload = await this._callPythonResolverEndpoint('/resolve', {
+            word,
+            language,
+            sourceContext,
+            stageHint,
+        });
+
+        return {
+            success: Boolean(payload.success),
+            translation: payload.translation || null,
+            stage: payload.stage || stageHint,
+            confidence: payload.confidence || CONFIDENCE_STATES.UNKNOWN,
+            domain: payload.domain || SEMANTIC_DOMAINS.GENERAL,
+            relatedTerms: Array.isArray(payload.relatedTerms) ? payload.relatedTerms : [],
+        };
+    }
+
+    async _callPythonResolverEndpoint(path, body) {
         if (typeof fetch !== 'function') {
             console.warn('Global fetch is unavailable. Python resolver call skipped.');
-            return { success: false };
+            return {};
         }
 
         const controller = new AbortController();
         const timeoutHandle = setTimeout(() => controller.abort(), this.pythonResolverTimeoutMs);
 
         try {
-            const response = await fetch(`${this.pythonResolverUrl}/resolve`, {
+            const response = await fetch(`${this.pythonResolverUrl}${path}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    word,
-                    language,
-                    sourceContext,
-                    stageHint,
-                }),
+                body: JSON.stringify(body),
                 signal: controller.signal,
             });
 
             if (!response.ok) {
                 console.warn(`Python resolver returned ${response.status}`);
-                return { success: false };
+                return {};
             }
 
-            const payload = await response.json();
-            return {
-                success: Boolean(payload.success),
-                translation: payload.translation || null,
-                stage: payload.stage || stageHint,
-                confidence: payload.confidence || CONFIDENCE_STATES.UNKNOWN,
-                domain: payload.domain || SEMANTIC_DOMAINS.GENERAL,
-                relatedTerms: Array.isArray(payload.relatedTerms) ? payload.relatedTerms : [],
-            };
+            return response.json();
         } catch (error) {
             console.warn(`Python resolver request failed: ${error.message}`);
-            return { success: false };
+            return {};
         } finally {
             clearTimeout(timeoutHandle);
         }
