@@ -1,0 +1,197 @@
+{
+  "createdAt": "2026-04-16T13:08:47.198Z",
+  "source": "live-resolver",
+  "resolverBaseUrl": "http://127.0.0.1:8000",
+  "resolutions": [
+    {
+      "word": "computer",
+      "language": "en",
+      "context": "The computer runs our translation pipeline.",
+      "result": {
+        "resolution": "ordinateur",
+        "stage": "context_inference",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "word": "language",
+      "language": "en",
+      "context": "Each language pair has different edge confidence.",
+      "result": {
+        "resolution": "langue",
+        "stage": "context_inference",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "word": "translation",
+      "language": "en",
+      "context": "Translation results should be persisted in graph form.",
+      "result": {
+        "resolution": "traduction",
+        "stage": "context_inference",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "word": "Mariam",
+      "language": "en",
+      "context": "Mariam reviewed the unresolved terms.",
+      "result": {
+        "resolution": "Mariam",
+        "stage": "transliteration",
+        "confidence": "inferred"
+      }
+    }
+  ],
+  "sigmaData": {
+    "nodes": [
+      {
+        "key": "node_en_computer",
+        "label": "computer",
+        "size": 7.079441541679836,
+        "color": "#FFA726",
+        "attributes": {
+          "language": "en",
+          "domain": "general",
+          "confidence": "inferred",
+          "occurrences": 1
+        }
+      },
+      {
+        "key": "node_fr_ordinateur",
+        "label": "ordinateur",
+        "size": 7.079441541679836,
+        "color": "#FF6B6B",
+        "attributes": {
+          "language": "fr",
+          "domain": "general",
+          "confidence": "unknown",
+          "occurrences": 1
+        }
+      },
+      {
+        "key": "node_en_language",
+        "label": "language",
+        "size": 7.079441541679836,
+        "color": "#FFA726",
+        "attributes": {
+          "language": "en",
+          "domain": "general",
+          "confidence": "inferred",
+          "occurrences": 1
+        }
+      },
+      {
+        "key": "node_fr_langue",
+        "label": "langue",
+        "size": 7.079441541679836,
+        "color": "#FF6B6B",
+        "attributes": {
+          "language": "fr",
+          "domain": "general",
+          "confidence": "unknown",
+          "occurrences": 1
+        }
+      },
+      {
+        "key": "node_en_translation",
+        "label": "translation",
+        "size": 7.079441541679836,
+        "color": "#FFA726",
+        "attributes": {
+          "language": "en",
+          "domain": "general",
+          "confidence": "inferred",
+          "occurrences": 1
+        }
+      },
+      {
+        "key": "node_fr_traduction",
+        "label": "traduction",
+        "size": 7.079441541679836,
+        "color": "#FF6B6B",
+        "attributes": {
+          "language": "fr",
+          "domain": "general",
+          "confidence": "unknown",
+          "occurrences": 1
+        }
+      },
+      {
+        "key": "node_en_mariam",
+        "label": "Mariam",
+        "size": 7.079441541679836,
+        "color": "#FFA726",
+        "attributes": {
+          "language": "en",
+          "domain": "general",
+          "confidence": "inferred",
+          "occurrences": 1
+        }
+      },
+      {
+        "key": "node_fr_mariam",
+        "label": "Mariam",
+        "size": 7.079441541679836,
+        "color": "#FF6B6B",
+        "attributes": {
+          "language": "fr",
+          "domain": "general",
+          "confidence": "unknown",
+          "occurrences": 1
+        }
+      }
+    ],
+    "edges": [
+      {
+        "key": "edge_node_en_computer_node_fr_ordinateur",
+        "source": "node_en_computer",
+        "target": "node_fr_ordinateur",
+        "label": "translates_to",
+        "weight": 0.95,
+        "attributes": {
+          "semanticType": "translates_to"
+        }
+      },
+      {
+        "key": "edge_node_en_language_node_fr_langue",
+        "source": "node_en_language",
+        "target": "node_fr_langue",
+        "label": "translates_to",
+        "weight": 0.95,
+        "attributes": {
+          "semanticType": "translates_to"
+        }
+      },
+      {
+        "key": "edge_node_en_translation_node_fr_traduction",
+        "source": "node_en_translation",
+        "target": "node_fr_traduction",
+        "label": "translates_to",
+        "weight": 0.95,
+        "attributes": {
+          "semanticType": "translates_to"
+        }
+      },
+      {
+        "key": "edge_node_en_mariam_node_fr_mariam",
+        "source": "node_en_mariam",
+        "target": "node_fr_mariam",
+        "label": "translates_to",
+        "weight": 0.95,
+        "attributes": {
+          "semanticType": "translates_to"
+        }
+      }
+    ]
+  },
+  "statistics": {
+    "totalNodesProcessed": 8,
+    "resolvedNodes": 4,
+    "unresolvedNodes": 4,
+    "resolutionSuccessRate": 57.14,
+    "totalNodes": 8,
+    "totalEdges": 4
+  }
+}
