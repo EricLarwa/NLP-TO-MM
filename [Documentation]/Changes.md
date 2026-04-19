@@ -30,3 +30,9 @@
 - Added unresolved-token rate reduction support when evaluation records include a baseline unresolved/OOV rate.
 - Added `Evaluation/sample-evaluation-set.json` as an example input file and `Evaluation/README.md` with the evaluation schema and run commands.
 - Added optional JSON report output to `Evaluation/evaluator.js` for archiving evaluation results.
+
+## Visualization Fixes
+
+- Added model API discovery for the Resolve button so the browser checks `/health` before posting to `/translate-sentence`.
+- Added support for `?api=http://127.0.0.1:<port>` in `Graphing/visualization-demo.html` to avoid static-server and model-server port collisions.
+- Wrapped Sigma initialization so wheel listeners attached to the graph container default to passive listeners and avoid Chrome scroll-blocking warnings.

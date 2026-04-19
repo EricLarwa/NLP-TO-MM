@@ -10,7 +10,7 @@ import re
 
 MODEL_NAME = "Helsinki-NLP/opus-mt-en-fr"
 HOST = os.getenv("PY_MODEL_HOST", "127.0.0.1")
-PORT = int(os.getenv("PY_MODEL_PORT", "8000"))
+PORT = int(os.getenv("PY_MODEL_PORT", "8001"))
 
 DOMAIN_KEYWORDS = {
 	"medical": {

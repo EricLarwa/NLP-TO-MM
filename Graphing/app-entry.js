@@ -12,12 +12,17 @@ const refreshBtn = document.getElementById('refresh-btn');
 const textInputEl = document.getElementById('text-input');
 const submitBtn = document.getElementById('submit-btn');
 
-const PYTHON_API_URL = 'http://127.0.0.1:8000';
+const urlParams = new URLSearchParams(window.location.search);
+const configuredApiUrl = urlParams.get('api');
+const PYTHON_API_CANDIDATES = configuredApiUrl
+    ? [configuredApiUrl]
+    : ['http://127.0.0.1:8000', 'http://127.0.0.1:8001'];
 
 let payloadData = null;
 let visualizer = null;
 let activeEnterHandler = null;
 let activeLeaveHandler = null;
+let activePythonApiUrl = null;
 
 const adapter = {
     getSigmaGraphData() {
@@ -78,6 +83,34 @@ async function loadPayload() {
     payloadData = await response.json();
 }
 
+async function findPythonApiUrl() {
+    if (activePythonApiUrl) {
+        return activePythonApiUrl;
+    }
+
+    for (const candidateUrl of PYTHON_API_CANDIDATES) {
+        try {
+            const response = await fetch(`${candidateUrl}/health`, {
+                method: 'GET',
+                cache: 'no-store',
+            });
+            if (response.ok) {
+                activePythonApiUrl = candidateUrl;
+                return activePythonApiUrl;
+            }
+        } catch (_error) {
+            // Try the next candidate.
+        }
+    }
+
+    const configuredHint = configuredApiUrl
+        ? `Configured API was ${configuredApiUrl}.`
+        : 'Tried http://127.0.0.1:8000 and http://127.0.0.1:8001.';
+    throw new Error(
+        `Model API not found. ${configuredHint} Start Model_Import.py, or open this page with ?api=http://127.0.0.1:<port>.`
+    );
+}
+
 async function renderOrRefresh(liveData) {
     if (liveData) {
         payloadData = liveData;
@@ -132,13 +165,14 @@ async function submitText() {
     setStatus('Resolving words via Python model...');
     submitBtn.disabled = true;
     try {
-        const response = await fetch(`${PYTHON_API_URL}/translate-sentence`, {
+        const pythonApiUrl = await findPythonApiUrl();
+        const response = await fetch(`${pythonApiUrl}/translate-sentence`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ text, language: 'en' }),
         });
         if (!response.ok) {
-            throw new Error(`Model API returned HTTP ${response.status}. Is Model_Import.py running?`);
+            throw new Error(`Model API returned HTTP ${response.status} from ${pythonApiUrl}.`);
         }
         const data = await response.json();
         await renderOrRefresh(data);
