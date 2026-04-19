@@ -36,3 +36,5 @@
 - Added model API discovery for the Resolve button so the browser checks `/health` before posting to `/translate-sentence`.
 - Added support for `?api=http://127.0.0.1:<port>` in `Graphing/visualization-demo.html` to avoid static-server and model-server port collisions.
 - Wrapped Sigma initialization so wheel listeners attached to the graph container default to passive listeners and avoid Chrome scroll-blocking warnings.
+- Added a Resolve result strip showing the model translation, detected OOV tokens, and resolved OOV outputs.
+- Added an explicit no-OOV status message for successful Resolve calls that do not add graph nodes.

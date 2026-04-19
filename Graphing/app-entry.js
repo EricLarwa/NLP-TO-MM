@@ -11,6 +11,7 @@ const detailHintEl = document.getElementById('detail-hint');
 const refreshBtn = document.getElementById('refresh-btn');
 const textInputEl = document.getElementById('text-input');
 const submitBtn = document.getElementById('submit-btn');
+const resultRowEl = document.getElementById('result-row');
 
 const urlParams = new URLSearchParams(window.location.search);
 const configuredApiUrl = urlParams.get('api');
@@ -34,6 +35,12 @@ function setStatus(message) {
     statusEl.textContent = message;
 }
 
+function setResult(message) {
+    if (resultRowEl) {
+        resultRowEl.innerHTML = message;
+    }
+}
+
 function resetDetails() {
     detailWordEl.textContent = '-';
     detailLanguageEl.textContent = '-';
@@ -41,6 +48,35 @@ function resetDetails() {
     detailDomainEl.textContent = '-';
     detailOccurrencesEl.textContent = '-';
     detailHintEl.textContent = 'Hover a node to inspect metadata.';
+}
+
+function escapeHtml(value) {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function summarizeResolution(data) {
+    const translation = data.translation ? escapeHtml(data.translation) : 'No translation returned';
+    const oovTokens = Array.isArray(data.oovTokens)
+        ? data.oovTokens.map(token => token.word || token).filter(Boolean)
+        : [];
+    const resolutions = Array.isArray(data.resolutions) ? data.resolutions : [];
+
+    if (!oovTokens.length) {
+        return `<strong>Translation:</strong> ${translation}<br><strong>OOV:</strong> none detected.`;
+    }
+
+    const resolvedWords = resolutions
+        .filter(resolution => resolution.success || resolution.translation)
+        .map(resolution => `${resolution.word} -> ${resolution.translation || 'manual review'}`);
+
+    return `<strong>Translation:</strong> ${translation}<br>` +
+        `<strong>OOV:</strong> ${escapeHtml(oovTokens.join(', '))}<br>` +
+        `<strong>Resolved:</strong> ${escapeHtml(resolvedWords.join(', ') || 'none')}`;
 }
 
 function wireNodeInteractions() {
@@ -149,20 +185,30 @@ async function renderOrRefresh(liveData) {
         typeof stats.oovTokenCount === 'number'
             ? ` | OOV: ${stats.oovTokenCount} (${stats.oovTokenRate ?? stats.unresolvedTokenRate ?? 0}%)`
             : '';
-    setStatus(
-        `Loaded ${nodes.length} nodes / ${edges.length} edges. ` +
-            `Resolved: ${stats.resolvedNodes ?? 'n/a'} | ` +
-            `Unresolved: ${stats.unresolvedNodes ?? 'n/a'}${oovSummary}`
-    );
+    if (liveData && stats.oovTokenCount === 0) {
+        setStatus('Resolved sentence; no OOV tokens were detected, so the graph has no new OOV nodes.');
+    } else {
+        setStatus(
+            `Loaded ${nodes.length} nodes / ${edges.length} edges. ` +
+                `Resolved: ${stats.resolvedNodes ?? 'n/a'} | ` +
+                `Unresolved: ${stats.unresolvedNodes ?? 'n/a'}${oovSummary}`
+        );
+    }
+
+    if (liveData) {
+        setResult(summarizeResolution(liveData));
+    }
 }
 
 async function submitText() {
     const text = textInputEl ? textInputEl.value.trim() : '';
     if (!text) {
         setStatus('Enter a sentence to resolve.');
+        setResult('Resolve a sentence to see translation and OOV details.');
         return;
     }
     setStatus('Resolving words via Python model...');
+    setResult('Waiting for model response...');
     submitBtn.disabled = true;
     try {
         const pythonApiUrl = await findPythonApiUrl();
@@ -178,6 +224,7 @@ async function submitText() {
         await renderOrRefresh(data);
     } catch (error) {
         setStatus(`Resolution failed: ${error.message}`);
+        setResult('Resolution did not complete. Check that Model_Import.py is running and that the API URL is correct.');
     } finally {
         submitBtn.disabled = false;
     }
