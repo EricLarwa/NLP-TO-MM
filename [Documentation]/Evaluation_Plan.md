@@ -10,39 +10,39 @@ This document defines the metrics, test cases, and success criteria for evaluati
 
 ### 1.1 Translation Quality Metrics
 
-| Metric | Description | Target | Measurement |
-|--------|-------------|--------|-------------|
-| **BLEU Score** | Machine translation evaluation metric (0-100, higher is better) | ≥ 28 on domain-specific test set | Compare model output against reference translations using sacrebleu |
-| **OOV Rate (Reduction)** | Percentage of unknown tokens relative to baseline | ≤ 5% on domain vocabulary | `count(unresolved_tokens) / total_tokens × 100` |
-| **Translation Accuracy** | Percentage of sentences with acceptable translation | ≥ 85% | Manual spot-check or automated evaluation against reference corpus |
-| **Inference Time** | Average latency per sentence translation | ≤ 500ms per sentence | Profile end-to-end translation latency across test set |
+| Metric                   | Description                                                     | Target                           | Measurement                                                         |
+| ------------------------ | --------------------------------------------------------------- | -------------------------------- | ------------------------------------------------------------------- |
+| **BLEU Score**           | Machine translation evaluation metric (0-100, higher is better) | ≥ 28 on domain-specific test set | Compare model output against reference translations using sacrebleu |
+| **OOV Rate (Reduction)** | Percentage of unknown tokens relative to baseline               | ≤ 5% on domain vocabulary        | `count(unresolved_tokens) / total_tokens × 100`                     |
+| **Translation Accuracy** | Percentage of sentences with acceptable translation             | ≥ 85%                            | Manual spot-check or automated evaluation against reference corpus  |
+| **Inference Time**       | Average latency per sentence translation                        | ≤ 500ms per sentence             | Profile end-to-end translation latency across test set              |
 
 ### 1.2 OOV Resolution Metrics
 
-| Metric | Description | Target | Measurement |
-|--------|-------------|--------|-------------|
-| **OOV Resolution Rate** | Percentage of OOV tokens successfully resolved | ≥ 75% | `resolved_tokens / detected_oov_tokens × 100` |
-| **Resolution Precision** | Accuracy of resolved translations | ≥ 70% | Manual review of a random sample of 100 resolved words |
-| **Resolution Recall** | Proportion of actual OOV tokens detected | ≥ 90% | Compare detected OOV against manual annotation |
-| **Fallback Pipeline Success** | Percentage of OOV tokens reaching each fallback stage | Context: ≥ 20%, Dictionary: ≥ 50%, Transliteration: ≥ 10% | Log distribution across resolution pipeline stages |
+| Metric                        | Description                                           | Target                                                    | Measurement                                            |
+| ----------------------------- | ----------------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------ |
+| **OOV Resolution Rate**       | Percentage of OOV tokens successfully resolved        | ≥ 75%                                                     | `resolved_tokens / detected_oov_tokens × 100`          |
+| **Resolution Precision**      | Accuracy of resolved translations                     | ≥ 70%                                                     | Manual review of a random sample of 100 resolved words |
+| **Resolution Recall**         | Proportion of actual OOV tokens detected              | ≥ 90%                                                     | Compare detected OOV against manual annotation         |
+| **Fallback Pipeline Success** | Percentage of OOV tokens reaching each fallback stage | Context: ≥ 20%, Dictionary: ≥ 50%, Transliteration: ≥ 10% | Log distribution across resolution pipeline stages     |
 
 ### 1.3 Knowledge Graph Metrics
 
-| Metric | Description | Target | Measurement |
-|--------|-------------|--------|-------------|
-| **Graph Growth Rate** | New nodes added per 1,000 sentences | ≥ 15 nodes/1K sentences | `new_nodes / (sentence_count / 1000)` |
-| **Node Confidence Distribution** | Nodes transitioning from `unknown` → `verified` | Unknown underflow after processing ≥ 80% | Count nodes in each confidence state (unknown, inferred, verified) |
-| **Graph Connectivity** | Average degree per node (semantic richness) | ≥ 1.8 edges/node | `total_edges / node_count` |
-| **Edge Type Distribution** | Balance across relation types | None > 60% of total edges | Breakdown: `translates_to`, `belongs_to`, `related_to`, `derived_from`, `conflicts_with` |
-| **Semantic Domain Coverage** | Number of distinct domains represented | ≥ 4 domains active | Count unique domain nodes: medical, legal, technical, slang, etc. |
+| Metric                           | Description                                     | Target                                   | Measurement                                                                              |
+| -------------------------------- | ----------------------------------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------- |
+| **Graph Growth Rate**            | New nodes added per 1,000 sentences             | ≥ 15 nodes/1K sentences                  | `new_nodes / (sentence_count / 1000)`                                                    |
+| **Node Confidence Distribution** | Nodes transitioning from `unknown` → `verified` | Unknown underflow after processing ≥ 80% | Count nodes in each confidence state (unknown, inferred, verified)                       |
+| **Graph Connectivity**           | Average degree per node (semantic richness)     | ≥ 1.8 edges/node                         | `total_edges / node_count`                                                               |
+| **Edge Type Distribution**       | Balance across relation types                   | None > 60% of total edges                | Breakdown: `translates_to`, `belongs_to`, `related_to`, `derived_from`, `conflicts_with` |
+| **Semantic Domain Coverage**     | Number of distinct domains represented          | ≥ 4 domains active                       | Count unique domain nodes: medical, legal, technical, slang, etc.                        |
 
 ### 1.4 Domain-Specific Metrics (Medical, Legal, Technical)
 
-| Domain | Key Metric | Target | Target Value |
-|--------|------------|--------|---------------|
-| **Medical** | Domain vocabulary coverage | Recall on medical term detection | ≥ 80% |
-| **Legal** | Domain vocabulary coverage | Precision on legal term classification | ≥ 85% |
-| **Technical** | Domain vocabulary coverage | F1 score on tech term detection | ≥ 0.80 |
+| Domain        | Key Metric                 | Target                                 | Target Value |
+| ------------- | -------------------------- | -------------------------------------- | ------------ |
+| **Medical**   | Domain vocabulary coverage | Recall on medical term detection       | ≥ 80%        |
+| **Legal**     | Domain vocabulary coverage | Precision on legal term classification | ≥ 85%        |
+| **Technical** | Domain vocabulary coverage | F1 score on tech term detection        | ≥ 0.80       |
 
 ---
 
@@ -50,20 +50,21 @@ This document defines the metrics, test cases, and success criteria for evaluati
 
 ### 2.1 Core Test Sets
 
-| Test Set | Size | Purpose | Source |
-|----------|------|---------|--------|
-| **Baseline Vocabulary** | 1,000 words | Verify known words translate correctly | Standard MT corpus (e.g., WMT shared task) |
-| **OOV Challenge Set** | 500 tokens | Verify OOV detection and resolution | Manually curated out-of-vocabulary words |
-| **Domain-Specific Medical** | 200 sentences | Evaluate domain accuracy | Medical glossaries + clinical trial abstracts |
-| **Domain-Specific Legal** | 200 sentences | Evaluate domain accuracy | Legal documents + contract language |
-| **Domain-Specific Technical** | 200 sentences | Evaluate domain accuracy | Software documentation + research papers |
-| **Mixed Domain** | 300 sentences | Evaluate cross-domain handling | Multi-domain corpus samples |
-| **Semantic Consistency** | 100 pairs | Verify semantic relations hold | Synonym/antonym pairs requiring consistent translation |
-| **Graph Stress Test** | 5,000 sentences | Measure scalability & growth | Extended dataset processing |
+| Test Set                      | Size            | Purpose                                | Source                                                 |
+| ----------------------------- | --------------- | -------------------------------------- | ------------------------------------------------------ |
+| **Baseline Vocabulary**       | 1,000 words     | Verify known words translate correctly | Standard MT corpus (e.g., WMT shared task)             |
+| **OOV Challenge Set**         | 500 tokens      | Verify OOV detection and resolution    | Manually curated out-of-vocabulary words               |
+| **Domain-Specific Medical**   | 200 sentences   | Evaluate domain accuracy               | Medical glossaries + clinical trial abstracts          |
+| **Domain-Specific Legal**     | 200 sentences   | Evaluate domain accuracy               | Legal documents + contract language                    |
+| **Domain-Specific Technical** | 200 sentences   | Evaluate domain accuracy               | Software documentation + research papers               |
+| **Mixed Domain**              | 300 sentences   | Evaluate cross-domain handling         | Multi-domain corpus samples                            |
+| **Semantic Consistency**      | 100 pairs       | Verify semantic relations hold         | Synonym/antonym pairs requiring consistent translation |
+| **Graph Stress Test**         | 5,000 sentences | Measure scalability & growth           | Extended dataset processing                            |
 
 ### 2.2 Test Set Composition
 
 **OOV Challenge Set Breakdown:**
+
 - 150 tokens: Single-character morphological variants
 - 100 tokens: Transliteration-heavy (loan words, proper nouns)
 - 100 tokens: Context-dependent (multiple valid translations)
@@ -71,6 +72,7 @@ This document defines the metrics, test cases, and success criteria for evaluati
 - 100 tokens: Slang and colloquialisms
 
 **Domain-Specific Set Breakdown (per domain):**
+
 - 100 sentences: Single-domain terminology only
 - 70 sentences: Mixed with 1-2 OOV tokens per sentence
 - 30 sentences: High density OOV (4+ OOV tokens per sentence)
@@ -107,16 +109,19 @@ This document defines the metrics, test cases, and success criteria for evaluati
 ### 3.4 Domain-Specific Passes When:
 
 **Medical:**
+
 - [ ] Medical vocabulary detection F1 ≥ 0.75
 - [ ] Medical translation accuracy ≥ 80% on 50-word reference sample
 - [ ] At least 15 medical domain nodes created during test
 
 **Legal:**
+
 - [ ] Legal vocabulary detection F1 ≥ 0.75
 - [ ] Legal translation accuracy ≥ 80% on 50-word reference sample
 - [ ] At least 15 legal domain nodes created during test
 
 **Technical:**
+
 - [ ] Technical vocabulary detection F1 ≥ 0.75
 - [ ] Technical translation accuracy ≥ 80% on 50-word reference sample
 - [ ] At least 15 technical domain nodes created during test
@@ -214,12 +219,14 @@ Tests should be automated using:
 - **CI/CD hooks**: Run smoke tests on every commit, full eval on PR merge
 
 ### Smoke Test Checklist
+
 - [ ] Translation completes without errors
 - [ ] Graph nodes are created
 - [ ] OOV detection triggers on challenge words
 - [ ] No memory leaks over 100-sentence run
 
 ### Full Evaluation Checklist
+
 - [ ] All test sets processed
 - [ ] All metrics calculated and logged
 - [ ] Comparison against baseline performed
@@ -229,13 +236,13 @@ Tests should be automated using:
 
 ## Part 7: Success Interpretation
 
-| Outcome | Interpretation | Action |
-|---------|-----------------|--------|
-| **All pass** | System meets quality bar | Approve for deployment / next milestone |
-| **Translation fails, others pass** | Model needs retraining or better inference tuning | Investigate BLEU regression, data quality |
-| **OOV resolution fails** | Fallback pipeline needs improvement | Review resolver precision, add more dictionaries |
-| **Graph fails** | Schema or merge logic issues | Debug edge creation and node deduplication |
-| **Domain-specific fails** | Vocabulary gaps in that domain | Add domain glossaries, retrain semantic relations |
+| Outcome                            | Interpretation                                    | Action                                            |
+| ---------------------------------- | ------------------------------------------------- | ------------------------------------------------- |
+| **All pass**                       | System meets quality bar                          | Approve for deployment / next milestone           |
+| **Translation fails, others pass** | Model needs retraining or better inference tuning | Investigate BLEU regression, data quality         |
+| **OOV resolution fails**           | Fallback pipeline needs improvement               | Review resolver precision, add more dictionaries  |
+| **Graph fails**                    | Schema or merge logic issues                      | Debug edge creation and node deduplication        |
+| **Domain-specific fails**          | Vocabulary gaps in that domain                    | Add domain glossaries, retrain semantic relations |
 
 ---
 
@@ -251,6 +258,7 @@ Tests should be automated using:
 ## Maintenance
 
 Update this plan when:
+
 - New domains are added
 - Model architecture changes
 - Test sets are refreshed or expanded
