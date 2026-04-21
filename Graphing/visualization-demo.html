@@ -123,6 +123,20 @@
         transform: none;
       }
 
+      .result-row {
+        min-height: 38px;
+        padding: 8px 20px 10px;
+        border-bottom: 1px solid var(--outline);
+        color: var(--muted);
+        font-size: 0.86rem;
+        line-height: 1.35;
+      }
+
+      .result-row strong {
+        color: var(--ink);
+        font-weight: 600;
+      }
+
     .layout {
       display: grid;
       grid-template-columns: 1fr 280px;
@@ -220,6 +234,7 @@
         />
         <button id="submit-btn" class="btn btn-accent" type="button">Resolve</button>
       </div>
+      <div id="result-row" class="result-row">Resolve a sentence to see translation and OOV details.</div>
 
     <div class="layout">
       <div id="graph-container"></div>

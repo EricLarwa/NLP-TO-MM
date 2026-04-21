@@ -39,10 +39,7 @@ class GraphVisualizer {
         const { nodes, edges } = this.knowledgeGraph.getSigmaGraphData();
         this.graph = this._buildGraph(GraphConstructor, nodes, edges);
 
-        this.sigmaInstance = new SigmaConstructor(this.graph, this.container, {
-            renderEdgeLabels: true,
-            ...this.options.sigmaSettings,
-        });
+        this.sigmaInstance = this._createSigmaInstance(SigmaConstructor, this.graph);
         this.isInitialized = true;
 
         return this.sigmaInstance;
@@ -66,10 +63,7 @@ class GraphVisualizer {
         }
 
         this.graph = this._buildGraph(GraphConstructor, nodes, edges);
-        this.sigmaInstance = new SigmaConstructor(this.graph, this.container, {
-            renderEdgeLabels: true,
-            ...this.options.sigmaSettings,
-        });
+        this.sigmaInstance = this._createSigmaInstance(SigmaConstructor, this.graph);
         this.isInitialized = true;
 
         return this.sigmaInstance;
@@ -131,6 +125,42 @@ class GraphVisualizer {
         });
 
         return graph;
+    }
+
+    _createSigmaInstance(SigmaConstructor, graph) {
+        const originalAddEventListenerMethod = this.container.addEventListener;
+        const originalAddEventListener = originalAddEventListenerMethod.bind(this.container);
+
+        this.container.addEventListener = (type, listener, options) => {
+            if (type === 'wheel' && options === undefined) {
+                return originalAddEventListener(type, listener, { passive: true });
+            }
+
+            if (type === 'wheel' && typeof options === 'boolean') {
+                return originalAddEventListener(type, listener, {
+                    capture: options,
+                    passive: true,
+                });
+            }
+
+            if (type === 'wheel' && options && typeof options === 'object' && options.passive === undefined) {
+                return originalAddEventListener(type, listener, {
+                    ...options,
+                    passive: true,
+                });
+            }
+
+            return originalAddEventListener(type, listener, options);
+        };
+
+        try {
+            return new SigmaConstructor(graph, this.container, {
+                renderEdgeLabels: true,
+                ...this.options.sigmaSettings,
+            });
+        } finally {
+            this.container.addEventListener = originalAddEventListenerMethod;
+        }
     }
 }
 
