@@ -1,6 +1,8 @@
 # install transformers, sentencepiece, and torch in terminal before running
 
 import json
+import logging
+import logging.handlers
 import os
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlsplit
@@ -11,6 +13,14 @@ import re
 MODEL_NAME = "Helsinki-NLP/opus-mt-en-fr"
 HOST = os.getenv("PY_MODEL_HOST", "127.0.0.1")
 PORT = int(os.getenv("PY_MODEL_PORT", "8001"))
+
+_log_path = os.path.join(os.path.dirname(__file__), "Evaluation", "evaluation.log")
+_log_handler = logging.handlers.RotatingFileHandler(
+    _log_path, maxBytes=5 * 1024 * 1024, backupCount=3, encoding="utf-8"
+)
+_log_handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s"))
+logging.basicConfig(level=logging.INFO, handlers=[_log_handler])
+app_log = logging.getLogger("nlp_model")
 
 DOMAIN_KEYWORDS = {
 	"medical": {
@@ -78,7 +88,10 @@ def inspect_token(word):
 
 def detect_oov_words(text):
 	"""Extract unique words and classify them using the Marian tokenizer vocabulary."""
-	return [inspect_token(word) for word in tokenize_words(text)]
+	results = [inspect_token(word) for word in tokenize_words(text)]
+	oov_count = sum(1 for item in results if item["isOov"])
+	app_log.info("OOV detection complete", extra={"totalTokens": len(results), "oovCount": oov_count})
+	return results
 
 
 def infer_domain(word, source_context=None):
@@ -159,6 +172,7 @@ def resolve_word(word, language="en", source_context=None, stage_hint="context_i
 			},
 		}
 
+	app_log.warning("OOV word flagged for manual review: %s (domain=%s)", word, domain)
 	return {
 		"success": False,
 		"translation": None,
@@ -403,6 +417,11 @@ class ModelRequestHandler(BaseHTTPRequestHandler):
 				detections = detect_oov_words(text.strip())
 				oov_tokens = [item for item in detections if item["isOov"]]
 				oov_token_rate = round(len(oov_tokens) / len(detections) * 100, 2) if detections else 0
+				app_log.info(
+					"/detect-oov: text=%r oovWords=%s",
+					text.strip()[:80],
+					[t["word"] for t in oov_tokens],
+				)
 				self._write_json(200, {
 					"tokens": detections,
 					"oovTokens": oov_tokens,
@@ -471,6 +490,7 @@ class ModelRequestHandler(BaseHTTPRequestHandler):
 				})
 
 		except Exception as exc:  # pragma: no cover - defensive runtime path
+			app_log.error("Request handler failed for %s: %s", route_path, exc)
 			self._write_json(500, {"error": "Handler failed", "detail": str(exc)})
 
 

@@ -1,5 +1,8 @@
 const fs = require('fs');
 const path = require('path');
+const Logger = require('./logger');
+
+const logger = new Logger();
 
 const DEFAULT_TARGETS = {
     bleuScore: 28,
@@ -172,6 +175,10 @@ function evaluateOOVResolution(records) {
         });
     });
 
+    if (reviewable > 0) {
+        logger.warn('OOV words flagged for manual review', { count: reviewable });
+    }
+
     const resolutionRate = percent(resolved, totalOOV);
     const resolutionPrecision = percent(correct, resolved);
     const resolutionF1 = resolutionPrecision + resolutionRate
@@ -253,6 +260,7 @@ function aggregateSigmaData(records) {
 function evaluateRecords(records, options = {}) {
     const targets = { ...DEFAULT_TARGETS, ...(options.targets || {}) };
     const sentenceCount = records.length;
+    logger.info('Starting evaluation', { sentenceCount });
     const translationMetrics = {
         bleuScore: computeCorpusBleu(records),
     };
@@ -276,6 +284,13 @@ function evaluateRecords(records, options = {}) {
         graphIntegrity: graphMetrics.integrityPass,
     };
 
+    const overallStatus = Object.values(checks).every(Boolean) ? 'PASS' : 'FAIL';
+    const failingChecks = Object.entries(checks).filter(([, v]) => !v).map(([k]) => k);
+    if (failingChecks.length > 0) {
+        logger.warn('Evaluation checks failed', { failingChecks });
+    }
+    logger.info('Evaluation complete', { sentenceCount, status: overallStatus });
+
     return {
         generatedAt: new Date().toISOString(),
         sentenceCount,
@@ -285,16 +300,24 @@ function evaluateRecords(records, options = {}) {
         oovResolution,
         graphMetrics,
         checks,
-        overallStatus: Object.values(checks).every(Boolean) ? 'PASS' : 'FAIL',
+        overallStatus,
     };
 }
 
 function loadRecords(inputPath) {
     const absolutePath = path.resolve(inputPath);
-    const payload = JSON.parse(fs.readFileSync(absolutePath, 'utf-8'));
+    let payload;
+    try {
+        payload = JSON.parse(fs.readFileSync(absolutePath, 'utf-8'));
+    } catch (err) {
+        logger.error('Failed to load evaluation records', { path: absolutePath, error: err.message });
+        throw err;
+    }
     if (Array.isArray(payload)) return payload;
     if (Array.isArray(payload.records)) return payload.records;
-    throw new Error('Evaluation input must be an array or an object with a records array.');
+    const structureError = new Error('Evaluation input must be an array or an object with a records array.');
+    logger.error('Invalid evaluation file structure', { path: absolutePath });
+    throw structureError;
 }
 
 function printReport(result) {
@@ -332,6 +355,10 @@ function printReport(result) {
     Object.entries(result.checks).forEach(([name, passed]) => {
         console.log(`- ${name}: ${passed ? 'PASS' : 'FAIL'}`);
     });
+    if (result.overallStatus === 'FAIL') {
+        const failing = Object.entries(result.checks).filter(([, v]) => !v).map(([k]) => k);
+        logger.error('Evaluation report: FAIL', { failingChecks: failing });
+    }
 }
 
 function main() {
@@ -352,7 +379,7 @@ if (require.main === module) {
     try {
         main();
     } catch (error) {
-        console.error(`Evaluation failed: ${error.message}`);
+        logger.error('Evaluation failed', { error: error.message });
         process.exitCode = 1;
     }
 }

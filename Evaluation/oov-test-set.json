@@ -1,0 +1,296 @@
+{
+  "records": [
+    {
+      "source": "The blockchain network validates transactions securely.",
+      "reference": "Le réseau blockchain valide les transactions de manière sécurisée.",
+      "prediction": "Le réseau blockchain valide les transactions de manière sécurisée.",
+      "baselineUnresolvedTokenRate": 38,
+      "oovCategory": "technical_jargon",
+      "expectedOOV": ["blockchain"],
+      "detectedOOV": ["blockchain"],
+      "expectedTranslations": { "blockchain": "blockchain" },
+      "resolutions": [
+        { "word": "blockchain", "translation": "blockchain", "stage": "context_inference", "success": true }
+      ],
+      "sigmaData": {
+        "nodes": [
+          { "key": "node_en_blockchain", "label": "blockchain", "attributes": { "language": "en", "domain": "technical", "confidence": "inferred" } },
+          { "key": "node_fr_blockchain", "label": "blockchain", "attributes": { "language": "fr", "domain": "technical", "confidence": "verified" } },
+          { "key": "domain_technical", "label": "technical", "attributes": { "language": "domain", "domain": "technical", "confidence": "verified" } }
+        ],
+        "edges": [
+          { "key": "edge_translates_to_node_en_blockchain_node_fr_blockchain", "source": "node_en_blockchain", "target": "node_fr_blockchain", "label": "translates_to", "attributes": { "semanticType": "translates_to" } },
+          { "key": "edge_belongs_to_node_en_blockchain_domain_technical", "source": "node_en_blockchain", "target": "domain_technical", "label": "belongs_to", "attributes": { "semanticType": "belongs_to" } }
+        ]
+      }
+    },
+    {
+      "source": "The microservices architecture handles concurrent requests.",
+      "reference": "L'architecture microservices gère les requêtes simultanées.",
+      "prediction": "L'architecture microservices gère les requêtes simultanées.",
+      "baselineUnresolvedTokenRate": 35,
+      "oovCategory": "technical_jargon",
+      "expectedOOV": ["microservices"],
+      "detectedOOV": ["microservices"],
+      "expectedTranslations": { "microservices": "microservices" },
+      "resolutions": [
+        { "word": "microservices", "translation": "microservices", "stage": "context_inference", "success": true }
+      ],
+      "sigmaData": {
+        "nodes": [
+          { "key": "node_en_microservices", "label": "microservices", "attributes": { "language": "en", "domain": "technical", "confidence": "inferred" } },
+          { "key": "node_fr_microservices", "label": "microservices", "attributes": { "language": "fr", "domain": "technical", "confidence": "verified" } },
+          { "key": "domain_technical", "label": "technical", "attributes": { "language": "domain", "domain": "technical", "confidence": "verified" } }
+        ],
+        "edges": [
+          { "key": "edge_translates_to_node_en_microservices_node_fr_microservices", "source": "node_en_microservices", "target": "node_fr_microservices", "label": "translates_to", "attributes": { "semanticType": "translates_to" } },
+          { "key": "edge_belongs_to_node_en_microservices_domain_technical", "source": "node_en_microservices", "target": "domain_technical", "label": "belongs_to", "attributes": { "semanticType": "belongs_to" } }
+        ]
+      }
+    },
+    {
+      "source": "The application runs in a containerized environment.",
+      "reference": "L'application s'exécute dans un environnement conteneurisé.",
+      "prediction": "L'application s'exécute dans un environnement conteneurisé.",
+      "baselineUnresolvedTokenRate": 32,
+      "oovCategory": "technical_jargon",
+      "expectedOOV": ["containerized"],
+      "detectedOOV": ["containerized"],
+      "expectedTranslations": { "containerized": "conteneurisé" },
+      "resolutions": [
+        { "word": "containerized", "translation": "conteneurisé", "stage": "dictionary_lookup", "success": true }
+      ],
+      "sigmaData": {
+        "nodes": [
+          { "key": "node_en_containerized", "label": "containerized", "attributes": { "language": "en", "domain": "technical", "confidence": "inferred" } },
+          { "key": "node_fr_conteneurise", "label": "conteneurisé", "attributes": { "language": "fr", "domain": "technical", "confidence": "verified" } },
+          { "key": "domain_technical", "label": "technical", "attributes": { "language": "domain", "domain": "technical", "confidence": "verified" } }
+        ],
+        "edges": [
+          { "key": "edge_translates_to_node_en_containerized_node_fr_conteneurise", "source": "node_en_containerized", "target": "node_fr_conteneurise", "label": "translates_to", "attributes": { "semanticType": "translates_to" } },
+          { "key": "edge_belongs_to_node_en_containerized_domain_technical", "source": "node_en_containerized", "target": "domain_technical", "label": "belongs_to", "attributes": { "semanticType": "belongs_to" } }
+        ]
+      }
+    },
+    {
+      "source": "The deepfake video was flagged by online moderators.",
+      "reference": "La vidéo hypertrucage a été signalée par les modérateurs en ligne.",
+      "prediction": "La vidéo hypertrucage a été signalée par les modérateurs en ligne.",
+      "baselineUnresolvedTokenRate": 44,
+      "oovCategory": "neologism",
+      "expectedOOV": ["deepfake"],
+      "detectedOOV": ["deepfake"],
+      "expectedTranslations": { "deepfake": "hypertrucage" },
+      "resolutions": [
+        { "word": "deepfake", "translation": "hypertrucage", "stage": "dictionary_lookup", "success": true }
+      ],
+      "sigmaData": {
+        "nodes": [
+          { "key": "node_en_deepfake", "label": "deepfake", "attributes": { "language": "en", "domain": "technical", "confidence": "inferred" } },
+          { "key": "node_fr_hypertrucage", "label": "hypertrucage", "attributes": { "language": "fr", "domain": "technical", "confidence": "verified" } },
+          { "key": "domain_technical", "label": "technical", "attributes": { "language": "domain", "domain": "technical", "confidence": "verified" } }
+        ],
+        "edges": [
+          { "key": "edge_translates_to_node_en_deepfake_node_fr_hypertrucage", "source": "node_en_deepfake", "target": "node_fr_hypertrucage", "label": "translates_to", "attributes": { "semanticType": "translates_to" } },
+          { "key": "edge_belongs_to_node_en_deepfake_domain_technical", "source": "node_en_deepfake", "target": "domain_technical", "label": "belongs_to", "attributes": { "semanticType": "belongs_to" } }
+        ]
+      }
+    },
+    {
+      "source": "Doomscrolling has been linked to increased anxiety.",
+      "reference": "Le doomscrolling a été associé à une anxiété accrue.",
+      "prediction": "Le doomscrolling a été associé à une anxiété accrue.",
+      "baselineUnresolvedTokenRate": 55,
+      "oovCategory": "neologism",
+      "expectedOOV": ["doomscrolling"],
+      "detectedOOV": ["doomscrolling"],
+      "expectedTranslations": { "doomscrolling": "défilement anxiogène" },
+      "resolutions": [
+        { "word": "doomscrolling", "translation": null, "stage": "manual_review", "success": false }
+      ],
+      "sigmaData": {
+        "nodes": [
+          { "key": "node_en_doomscrolling", "label": "doomscrolling", "attributes": { "language": "en", "domain": "slang", "confidence": "unknown" } },
+          { "key": "domain_slang", "label": "slang", "attributes": { "language": "domain", "domain": "slang", "confidence": "verified" } }
+        ],
+        "edges": [
+          { "key": "edge_belongs_to_node_en_doomscrolling_domain_slang", "source": "node_en_doomscrolling", "target": "domain_slang", "label": "belongs_to", "attributes": { "semanticType": "belongs_to" } }
+        ]
+      }
+    },
+    {
+      "source": "The fintech startup launched a new payment platform.",
+      "reference": "La startup de technologie financière a lancé une nouvelle plateforme de paiement.",
+      "prediction": "La startup de technologie financière a lancé une nouvelle plateforme de paiement.",
+      "baselineUnresolvedTokenRate": 42,
+      "oovCategory": "neologism",
+      "expectedOOV": ["fintech"],
+      "detectedOOV": ["fintech"],
+      "expectedTranslations": { "fintech": "technologie financière" },
+      "resolutions": [
+        { "word": "fintech", "translation": "technologie financière", "stage": "context_inference", "success": true }
+      ],
+      "sigmaData": {
+        "nodes": [
+          { "key": "node_en_fintech", "label": "fintech", "attributes": { "language": "en", "domain": "technical", "confidence": "inferred" } },
+          { "key": "node_fr_technologie_financiere", "label": "technologie financière", "attributes": { "language": "fr", "domain": "technical", "confidence": "verified" } },
+          { "key": "domain_technical", "label": "technical", "attributes": { "language": "domain", "domain": "technical", "confidence": "verified" } }
+        ],
+        "edges": [
+          { "key": "edge_translates_to_node_en_fintech_node_fr_technologie_financiere", "source": "node_en_fintech", "target": "node_fr_technologie_financiere", "label": "translates_to", "attributes": { "semanticType": "translates_to" } },
+          { "key": "edge_belongs_to_node_en_fintech_domain_technical", "source": "node_en_fintech", "target": "domain_technical", "label": "belongs_to", "attributes": { "semanticType": "belongs_to" } }
+        ]
+      }
+    },
+    {
+      "source": "Elon presented the latest product roadmap at the conference.",
+      "reference": "Elon a présenté la dernière feuille de route produit lors de la conférence.",
+      "prediction": "Elon a présenté la dernière feuille de route produit lors de la conférence.",
+      "baselineUnresolvedTokenRate": 28,
+      "oovCategory": "proper_noun",
+      "expectedOOV": ["Elon"],
+      "detectedOOV": ["Elon"],
+      "expectedTranslations": { "elon": "Elon" },
+      "resolutions": [
+        { "word": "Elon", "translation": "Elon", "stage": "transliteration", "success": true }
+      ],
+      "sigmaData": {
+        "nodes": [
+          { "key": "node_en_elon", "label": "Elon", "attributes": { "language": "en", "domain": "proper_noun", "confidence": "inferred" } },
+          { "key": "node_fr_elon", "label": "Elon", "attributes": { "language": "fr", "domain": "proper_noun", "confidence": "inferred" } },
+          { "key": "domain_proper_noun", "label": "proper_noun", "attributes": { "language": "domain", "domain": "proper_noun", "confidence": "verified" } }
+        ],
+        "edges": [
+          { "key": "edge_translates_to_node_en_elon_node_fr_elon", "source": "node_en_elon", "target": "node_fr_elon", "label": "translates_to", "attributes": { "semanticType": "translates_to" } },
+          { "key": "edge_belongs_to_node_en_elon_domain_proper_noun", "source": "node_en_elon", "target": "domain_proper_noun", "label": "belongs_to", "attributes": { "semanticType": "belongs_to" } }
+        ]
+      }
+    },
+    {
+      "source": "OpenAI released a new generation model last year.",
+      "reference": "OpenAI a publié un modèle de nouvelle génération l'année dernière.",
+      "prediction": "OpenAI a publié un modèle de nouvelle génération l'année dernière.",
+      "baselineUnresolvedTokenRate": 33,
+      "oovCategory": "proper_noun",
+      "expectedOOV": ["OpenAI"],
+      "detectedOOV": ["OpenAI"],
+      "expectedTranslations": { "openai": "OpenAI" },
+      "resolutions": [
+        { "word": "OpenAI", "translation": null, "stage": "manual_review", "success": false }
+      ],
+      "sigmaData": {
+        "nodes": [
+          { "key": "node_en_openai", "label": "OpenAI", "attributes": { "language": "en", "domain": "proper_noun", "confidence": "unknown" } },
+          { "key": "domain_proper_noun", "label": "proper_noun", "attributes": { "language": "domain", "domain": "proper_noun", "confidence": "verified" } }
+        ],
+        "edges": [
+          { "key": "edge_belongs_to_node_en_openai_domain_proper_noun", "source": "node_en_openai", "target": "domain_proper_noun", "label": "belongs_to", "attributes": { "semanticType": "belongs_to" } }
+        ]
+      }
+    },
+    {
+      "source": "The patient was diagnosed with tachycardia after the stress test.",
+      "reference": "Le patient a été diagnostiqué avec une tachycardie après le test d'effort.",
+      "prediction": "Le patient a été diagnostiqué avec une tachycardie après le test d'effort.",
+      "baselineUnresolvedTokenRate": 27,
+      "oovCategory": "medical",
+      "expectedOOV": ["tachycardia"],
+      "detectedOOV": ["tachycardia"],
+      "expectedTranslations": { "tachycardia": "tachycardie" },
+      "resolutions": [
+        { "word": "tachycardia", "translation": "tachycardie", "stage": "dictionary_lookup", "success": true }
+      ],
+      "sigmaData": {
+        "nodes": [
+          { "key": "node_en_tachycardia", "label": "tachycardia", "attributes": { "language": "en", "domain": "medical", "confidence": "inferred" } },
+          { "key": "node_fr_tachycardie", "label": "tachycardie", "attributes": { "language": "fr", "domain": "medical", "confidence": "verified" } },
+          { "key": "domain_medical", "label": "medical", "attributes": { "language": "domain", "domain": "medical", "confidence": "verified" } }
+        ],
+        "edges": [
+          { "key": "edge_translates_to_node_en_tachycardia_node_fr_tachycardie", "source": "node_en_tachycardia", "target": "node_fr_tachycardie", "label": "translates_to", "attributes": { "semanticType": "translates_to" } },
+          { "key": "edge_belongs_to_node_en_tachycardia_domain_medical", "source": "node_en_tachycardia", "target": "domain_medical", "label": "belongs_to", "attributes": { "semanticType": "belongs_to" } }
+        ]
+      }
+    },
+    {
+      "source": "Immunotherapy has improved outcomes for cancer patients.",
+      "reference": "L'immunothérapie a amélioré les résultats pour les patients atteints de cancer.",
+      "prediction": "L'immunothérapie a amélioré les résultats pour les patients atteints de cancer.",
+      "baselineUnresolvedTokenRate": 23,
+      "oovCategory": "medical",
+      "expectedOOV": ["immunotherapy"],
+      "detectedOOV": ["immunotherapy"],
+      "expectedTranslations": { "immunotherapy": "immunothérapie" },
+      "resolutions": [
+        { "word": "immunotherapy", "translation": "immunothérapie", "stage": "dictionary_lookup", "success": true }
+      ],
+      "sigmaData": {
+        "nodes": [
+          { "key": "node_en_immunotherapy", "label": "immunotherapy", "attributes": { "language": "en", "domain": "medical", "confidence": "inferred" } },
+          { "key": "node_fr_immunotherapie", "label": "immunothérapie", "attributes": { "language": "fr", "domain": "medical", "confidence": "verified" } },
+          { "key": "domain_medical", "label": "medical", "attributes": { "language": "domain", "domain": "medical", "confidence": "verified" } }
+        ],
+        "edges": [
+          { "key": "edge_translates_to_node_en_immunotherapy_node_fr_immunotherapie", "source": "node_en_immunotherapy", "target": "node_fr_immunotherapie", "label": "translates_to", "attributes": { "semanticType": "translates_to" } },
+          { "key": "edge_belongs_to_node_en_immunotherapy_domain_medical", "source": "node_en_immunotherapy", "target": "domain_medical", "label": "belongs_to", "attributes": { "semanticType": "belongs_to" } }
+        ]
+      }
+    },
+    {
+      "source": "The witness received a subpoena to testify in court.",
+      "reference": "Le témoin a reçu une citation à comparaître pour témoigner au tribunal.",
+      "prediction": "Le témoin a reçu une citation à comparaître pour témoigner au tribunal.",
+      "baselineUnresolvedTokenRate": 36,
+      "oovCategory": "legal",
+      "expectedOOV": ["subpoena"],
+      "detectedOOV": ["subpoena"],
+      "expectedTranslations": { "subpoena": "citation à comparaître" },
+      "resolutions": [
+        { "word": "subpoena", "translation": "citation à comparaître", "stage": "dictionary_lookup", "success": true }
+      ],
+      "sigmaData": {
+        "nodes": [
+          { "key": "node_en_subpoena", "label": "subpoena", "attributes": { "language": "en", "domain": "legal", "confidence": "inferred" } },
+          { "key": "node_fr_citation_a_comparaitre", "label": "citation à comparaître", "attributes": { "language": "fr", "domain": "legal", "confidence": "verified" } },
+          { "key": "domain_legal", "label": "legal", "attributes": { "language": "domain", "domain": "legal", "confidence": "verified" } }
+        ],
+        "edges": [
+          { "key": "edge_translates_to_node_en_subpoena_node_fr_citation_a_comparaitre", "source": "node_en_subpoena", "target": "node_fr_citation_a_comparaitre", "label": "translates_to", "attributes": { "semanticType": "translates_to" } },
+          { "key": "edge_belongs_to_node_en_subpoena_domain_legal", "source": "node_en_subpoena", "target": "domain_legal", "label": "belongs_to", "attributes": { "semanticType": "belongs_to" } }
+        ]
+      }
+    },
+    {
+      "source": "The API uses GPU acceleration for NLP processing tasks.",
+      "reference": "L'API utilise l'accélération GPU pour les tâches de traitement TAL.",
+      "prediction": "L'API utilise l'accélération GPU pour les tâches de traitement NLP.",
+      "baselineUnresolvedTokenRate": 62,
+      "oovCategory": "abbreviation",
+      "expectedOOV": ["API", "GPU", "NLP"],
+      "detectedOOV": ["API", "GPU", "NLP"],
+      "expectedTranslations": { "api": "API", "gpu": "GPU", "nlp": "TAL" },
+      "resolutions": [
+        { "word": "API", "translation": "API", "stage": "dictionary_lookup", "success": true },
+        { "word": "GPU", "translation": "GPU", "stage": "dictionary_lookup", "success": true },
+        { "word": "NLP", "translation": null, "stage": "manual_review", "success": false }
+      ],
+      "sigmaData": {
+        "nodes": [
+          { "key": "node_en_api", "label": "API", "attributes": { "language": "en", "domain": "technical", "confidence": "inferred" } },
+          { "key": "node_fr_api", "label": "API", "attributes": { "language": "fr", "domain": "technical", "confidence": "verified" } },
+          { "key": "node_en_gpu", "label": "GPU", "attributes": { "language": "en", "domain": "technical", "confidence": "inferred" } },
+          { "key": "node_fr_gpu", "label": "GPU", "attributes": { "language": "fr", "domain": "technical", "confidence": "verified" } },
+          { "key": "node_en_nlp", "label": "NLP", "attributes": { "language": "en", "domain": "technical", "confidence": "unknown" } },
+          { "key": "domain_technical", "label": "technical", "attributes": { "language": "domain", "domain": "technical", "confidence": "verified" } }
+        ],
+        "edges": [
+          { "key": "edge_translates_to_node_en_api_node_fr_api", "source": "node_en_api", "target": "node_fr_api", "label": "translates_to", "attributes": { "semanticType": "translates_to" } },
+          { "key": "edge_translates_to_node_en_gpu_node_fr_gpu", "source": "node_en_gpu", "target": "node_fr_gpu", "label": "translates_to", "attributes": { "semanticType": "translates_to" } },
+          { "key": "edge_belongs_to_node_en_api_domain_technical", "source": "node_en_api", "target": "domain_technical", "label": "belongs_to", "attributes": { "semanticType": "belongs_to" } },
+          { "key": "edge_belongs_to_node_en_gpu_domain_technical", "source": "node_en_gpu", "target": "domain_technical", "label": "belongs_to", "attributes": { "semanticType": "belongs_to" } },
+          { "key": "edge_belongs_to_node_en_nlp_domain_technical", "source": "node_en_nlp", "target": "domain_technical", "label": "belongs_to", "attributes": { "semanticType": "belongs_to" } }
+        ]
+      }
+    }
+  ]
+}
