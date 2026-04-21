@@ -49,6 +49,41 @@ SUFFIX_RULES = (
 	("s", ""),
 )
 
+# Build a known vocabulary from domain keywords and related terms
+def _build_known_vocabulary():
+	"""Compile all known domain keywords and related terms into a set."""
+	known = set()
+	# Add all domain keywords
+	for domain, keywords in DOMAIN_KEYWORDS.items():
+		known.update(keywords)
+	# Add all related terms
+	for term, neighbors in RELATED_TERMS.items():
+		known.add(term)
+		known.update(neighbors)
+	# Add common English words to avoid false positives
+	common_words = {
+		"the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "from",
+		"for", "with", "by", "of", "is", "are", "was", "were", "be", "been",
+		"have", "has", "do", "does", "did", "can", "could", "will", "would",
+		"should", "may", "might", "must", "need", "want", "like", "love", "hate",
+		"good", "bad", "great", "small", "large", "new", "old", "first", "last",
+		"one", "two", "three", "four", "five", "many", "some", "all", "each",
+		"this", "that", "these", "those", "he", "she", "it", "they", "you", "me", "us",
+		"my", "your", "his", "her", "its", "our", "their", "what", "which", "who",
+		"where", "when", "why", "how", "through", "during", "before", "after",
+		"above", "below", "under", "over", "between", "among", "across", "into",
+		"about", "as", "if", "because", "while", "when", "since", "until", "unless",
+		"use", "make", "give", "know", "think", "say", "show", "tell", "see", "get",
+		"come", "go", "take", "put", "let", "keep", "turn", "move", "start", "help",
+		"call", "try", "ask", "need", "feel", "become", "leave", "seem", "find",
+		"very", "just", "also", "even", "only", "still", "more", "most", "less",
+		"high", "low", "right", "wrong", "true", "false", "yes", "no", "ok", "well",
+	}
+	known.update(common_words)
+	return known
+
+KNOWN_VOCABULARY = _build_known_vocabulary()
+
 tokenizer = MarianTokenizer.from_pretrained(MODEL_NAME)
 model = MarianMTModel.from_pretrained(MODEL_NAME)
 
@@ -60,19 +95,20 @@ def translate_text(text):
 
 
 def inspect_token(word):
-	"""Return tokenizer-level OOV details for one source token."""
-	pieces = tokenizer.tokenize(word)
-	token_ids = tokenizer.convert_tokens_to_ids(pieces)
-	unk_token = tokenizer.unk_token
-	unk_token_id = tokenizer.unk_token_id
-	is_oov = any(piece == unk_token for piece in pieces) or any(token_id == unk_token_id for token_id in token_ids)
-
+	"""Check if a word is OOV based on domain vocabulary, not tokenizer.
+	
+	A word is considered OOV if it's not in our known domain vocabularies.
+	This enables the system to flag and learn new domain-specific terms.
+	"""
+	word_lower = word.lower()
+	is_oov = word_lower not in KNOWN_VOCABULARY
+	
 	return {
 		"word": word,
-		"pieces": pieces,
-		"tokenIds": token_ids,
+		"pieces": tokenizer.tokenize(word),
+		"tokenIds": tokenizer.convert_tokens_to_ids(tokenizer.tokenize(word)),
 		"isOov": is_oov,
-		"reason": "unknown_token" if is_oov else "in_vocabulary",
+		"reason": "not_in_domain_vocabulary" if is_oov else "in_known_domains",
 	}
 
 
