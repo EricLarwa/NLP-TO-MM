@@ -49,7 +49,28 @@ SUFFIX_RULES = (
 	("s", ""),
 )
 
-# Build a known vocabulary from domain keywords and related terms
+# Persistent learning: tracks learned words across sessions
+LEARNED_VOCABULARY_FILE = os.path.join(os.path.dirname(__file__), "learned_vocabulary.json")
+
+def _load_learned_vocabulary():
+	"""Load previously learned words from disk."""
+	if os.path.exists(LEARNED_VOCABULARY_FILE):
+		try:
+			with open(LEARNED_VOCABULARY_FILE, "r") as f:
+				data = json.load(f)
+				return data.get("words", {})
+		except Exception as e:
+			print(f"Warning: Could not load learned vocabulary: {e}")
+	return {}
+
+def _save_learned_vocabulary(learned_words):
+	"""Persist learned words to disk."""
+	try:
+		with open(LEARNED_VOCABULARY_FILE, "w") as f:
+			json.dump({"words": learned_words}, f, indent=2)
+	except Exception as e:
+		print(f"Warning: Could not save learned vocabulary: {e}")
+
 def _build_known_vocabulary():
 	"""Compile all known domain keywords and related terms into a set."""
 	known = set()
@@ -80,8 +101,13 @@ def _build_known_vocabulary():
 		"high", "low", "right", "wrong", "true", "false", "yes", "no", "ok", "well",
 	}
 	known.update(common_words)
+	# Load and add previously learned words
+	learned = _load_learned_vocabulary()
+	known.update(learned.keys())
 	return known
 
+# Initialize with both domain keywords and learned vocabulary
+LEARNED_VOCABULARY = _load_learned_vocabulary()
 KNOWN_VOCABULARY = _build_known_vocabulary()
 
 tokenizer = MarianTokenizer.from_pretrained(MODEL_NAME)
@@ -161,7 +187,7 @@ def resolve_word(word, language="en", source_context=None, stage_hint="context_i
 
 	if translation and translation.strip() and translation.lower() != word.lower():
 		confidence = "inferred"
-		return {
+		result = {
 			"success": True,
 			"translation": translation,
 			"stage": stage_hint,
@@ -176,10 +202,13 @@ def resolve_word(word, language="en", source_context=None, stage_hint="context_i
 				"tokenInspection": inspect_token(word),
 			},
 		}
+		# Persist the learned word
+		_persist_learned_word(word, result)
+		return result
 
 	# Fallback for names/proper nouns when translation is unchanged
 	if stage_hint == "transliteration" and word[:1].isupper():
-		return {
+		result = {
 			"success": True,
 			"translation": word,
 			"stage": "transliteration",
@@ -194,6 +223,9 @@ def resolve_word(word, language="en", source_context=None, stage_hint="context_i
 				"tokenInspection": inspect_token(word),
 			},
 		}
+		# Persist the learned word
+		_persist_learned_word(word, result)
+		return result
 
 	return {
 		"success": False,
@@ -210,6 +242,28 @@ def resolve_word(word, language="en", source_context=None, stage_hint="context_i
 			"tokenInspection": inspect_token(word),
 		},
 	}
+
+
+def _persist_learned_word(word, resolution):
+	"""Save a successfully resolved word to persistent memory."""
+	global LEARNED_VOCABULARY, KNOWN_VOCABULARY
+	
+	word_lower = word.lower()
+	
+	# Store the full resolution metadata
+	LEARNED_VOCABULARY[word_lower] = {
+		"word": word,
+		"translation": resolution.get("translation"),
+		"domain": resolution.get("domain"),
+		"confidence": resolution.get("confidence"),
+		"learned_at": str(__import__("datetime").datetime.now()),
+	}
+	
+	# Update in-memory vocabulary
+	KNOWN_VOCABULARY.add(word_lower)
+	
+	# Persist to disk
+	_save_learned_vocabulary(LEARNED_VOCABULARY)
 
 
 def tokenize_words(text):
