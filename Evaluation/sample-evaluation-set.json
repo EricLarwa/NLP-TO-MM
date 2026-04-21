@@ -17,8 +17,8 @@
       "reference": "L'ordinateur execute le modele de traduction.",
       "prediction": "L'ordinateur execute le modele de traduction.",
       "baselineUnresolvedTokenRate": 50,
-      "expectedOOV": ["computer", "translation"],
-      "detectedOOV": ["computer", "translation"],
+      "expectedDomainTerms": ["computer", "translation"],
+      "detectedDomainTerms": ["computer", "translation"],
       "expectedTranslations": {
         "computer": "ordinateur",
         "translation": "traduction"
@@ -92,8 +92,8 @@
       "reference": "Mariam a examine le contrat juridique.",
       "prediction": "Mariam a examine le contrat juridique.",
       "baselineUnresolvedTokenRate": 40,
-      "expectedOOV": ["Mariam", "contract"],
-      "detectedOOV": ["Mariam", "contract"],
+      "expectedDomainTerms": ["Mariam", "contract"],
+      "detectedDomainTerms": ["Mariam", "contract"],
       "expectedTranslations": {
         "mariam": "Mariam",
         "contract": "contrat"

@@ -29,12 +29,12 @@ Each record can include:
 - `source`: source sentence.
 - `reference`: expected sentence translation.
 - `prediction` or `translation`: model output to compare against `reference`.
-- `expectedOOV`: manually annotated OOV words.
-- `detectedOOV`, `tokens`, or `oovTokens`: OOV detector output.
-- `expectedTranslations`: map of OOV word to expected translation.
-- `resolutions`: resolved OOV terms with `word`, `translation`, and `success`.
+- `expectedDomainTerms`: manually annotated domain-specific terms to detect.
+- `detectedDomainTerms`, `detectedOOV`, `tokens`, or `oovTokens`: detector output. The older OOV names remain supported for compatibility.
+- `expectedTranslations`: map of domain term to expected translation.
+- `resolutions`: resolved domain terms with `word`, `translation`, and `success`.
 - `sigmaData`: graph payload with `nodes` and `edges`.
-- `baselineUnresolvedTokenRate`: baseline unresolved/OOV rate for reduction comparisons.
+- `baselineUnresolvedTokenRate`: baseline unresolved/domain-term rate for reduction comparisons.
 
 The top-level JSON object can include:
 

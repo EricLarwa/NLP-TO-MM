@@ -30,6 +30,8 @@
 - Added unresolved-token rate reduction support when evaluation records include a baseline unresolved/OOV rate.
 - Added `Evaluation/sample-evaluation-set.json` as an example input file and `Evaluation/README.md` with the evaluation schema and run commands.
 - Added optional JSON report output to `Evaluation/evaluator.js` for archiving evaluation results.
+- Reframed evaluation wording around domain-specific term detection because Marian's subword tokenizer rarely emits `<unk>` tokens.
+- Added `expectedDomainTerms` and `detectedDomainTerms` support while retaining the older OOV field names for compatibility.
 
 ## Visualization Fixes
 

@@ -72,6 +72,7 @@ function normalizeWordList(words) {
 }
 
 function getDetectedOOVWords(record) {
+    if (Array.isArray(record.detectedDomainTerms)) return normalizeWordList(record.detectedDomainTerms);
     if (Array.isArray(record.detectedOOV)) return normalizeWordList(record.detectedOOV);
     if (Array.isArray(record.oovTokens)) {
         return normalizeWordList(record.oovTokens.map(token => token.word || token));
@@ -84,6 +85,10 @@ function getDetectedOOVWords(record) {
         );
     }
     return new Set();
+}
+
+function getExpectedDomainTerms(record) {
+    return normalizeWordList(record.expectedDomainTerms || record.expectedOOV);
 }
 
 function countSetOverlap(left, right) {
@@ -108,7 +113,7 @@ function evaluateOOVDetection(records) {
     const baselineRates = [];
 
     records.forEach(record => {
-        const expected = normalizeWordList(record.expectedOOV);
+        const expected = getExpectedDomainTerms(record);
         const detected = getDetectedOOVWords(record);
         truePositive += countSetOverlap(detected, expected);
         falsePositive += Array.from(detected).filter(word => !expected.has(word)).length;
@@ -138,6 +143,7 @@ function evaluateOOVDetection(records) {
         recall,
         f1,
         oovTokenRate,
+        domainTermRate: oovTokenRate,
         baselineUnresolvedTokenRate,
         unresolvedTokenRateReduction: baselineUnresolvedTokenRate === null
             ? null
@@ -154,7 +160,8 @@ function evaluateOOVResolution(records) {
     records.forEach(record => {
         const expectedTranslations = record.expectedTranslations || {};
         const resolutions = Array.isArray(record.resolutions) ? record.resolutions : [];
-        totalOOV += record.expectedOOV ? record.expectedOOV.length : getDetectedOOVWords(record).size;
+        const expectedTerms = record.expectedDomainTerms || record.expectedOOV;
+        totalOOV += expectedTerms ? expectedTerms.length : getDetectedOOVWords(record).size;
 
         resolutions.forEach(resolution => {
             const word = String(resolution.word || '').toLowerCase();
@@ -320,17 +327,17 @@ function printReport(result) {
     console.log('Translation Metrics');
     console.log(`- BLEU Score: ${result.translationMetrics.bleuScore}`);
     console.log('');
-    console.log('OOV Detection');
+    console.log('Domain Term Detection');
     console.log(`- Precision: ${result.oovDetection.precision}%`);
     console.log(`- Recall: ${result.oovDetection.recall}%`);
     console.log(`- F1: ${result.oovDetection.f1}%`);
-    console.log(`- OOV Token Rate: ${result.oovDetection.oovTokenRate}%`);
+    console.log(`- Domain Term Rate: ${result.oovDetection.domainTermRate}%`);
     if (result.oovDetection.baselineUnresolvedTokenRate !== null) {
         console.log(`- Baseline Unresolved Token Rate: ${result.oovDetection.baselineUnresolvedTokenRate}%`);
         console.log(`- Unresolved Token Rate Reduction: ${result.oovDetection.unresolvedTokenRateReduction}%`);
     }
     console.log('');
-    console.log('OOV Resolution');
+    console.log('Domain Term Resolution');
     console.log(`- Resolution Rate: ${result.oovResolution.resolutionRate}%`);
     console.log(`- Resolution Precision: ${result.oovResolution.resolutionPrecision}%`);
     console.log(`- Resolution F1: ${result.oovResolution.resolutionF1}%`);

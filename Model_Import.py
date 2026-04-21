@@ -121,10 +121,11 @@ def translate_text(text):
 
 
 def inspect_token(word):
-	"""Check if a word is OOV based on domain vocabulary, not tokenizer.
+	"""Check whether a word should enter the domain-term resolution pipeline.
 	
-	A word is considered OOV if it's not in our known domain vocabularies.
-	This enables the system to flag and learn new domain-specific terms.
+	Marian tokenization is subword-based and rarely emits an unknown token, so this
+	project treats "unknown" as unknown to the project vocabulary instead. A term is
+	flagged when it is not in the curated domain vocabulary or learned vocabulary.
 	"""
 	word_lower = word.lower()
 	is_oov = word_lower not in KNOWN_VOCABULARY
@@ -139,7 +140,7 @@ def inspect_token(word):
 
 
 def detect_oov_words(text):
-	"""Extract unique words and classify them using the Marian tokenizer vocabulary."""
+	"""Extract unique words and classify them against the domain/learned vocabulary."""
 	return [inspect_token(word) for word in tokenize_words(text)]
 
 
