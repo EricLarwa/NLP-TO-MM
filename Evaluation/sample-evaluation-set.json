@@ -1,4 +1,16 @@
 {
+  "name": "Sample Evaluation Set",
+  "targets": {
+    "bleuScore": 28,
+    "oovTokenRate": 40,
+    "oovDetectionRecall": 90,
+    "oovDetectionF1": 80,
+    "oovResolutionRate": 75,
+    "graphGrowthRate": 15,
+    "graphConnectivity": 0.5,
+    "dominantEdgeTypePercent": 60,
+    "minimumDomainCount": 3
+  },
   "records": [
     {
       "source": "The computer runs the translation model.",

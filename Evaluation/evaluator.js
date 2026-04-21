@@ -289,16 +289,31 @@ function evaluateRecords(records, options = {}) {
     };
 }
 
-function loadRecords(inputPath) {
+function loadEvaluationInput(inputPath) {
     const absolutePath = path.resolve(inputPath);
     const payload = JSON.parse(fs.readFileSync(absolutePath, 'utf-8'));
-    if (Array.isArray(payload)) return payload;
-    if (Array.isArray(payload.records)) return payload.records;
+    if (Array.isArray(payload)) {
+        return {
+            records: payload,
+            targets: {},
+            name: path.basename(inputPath),
+        };
+    }
+    if (Array.isArray(payload.records)) {
+        return {
+            records: payload.records,
+            targets: payload.targets || {},
+            name: payload.name || path.basename(inputPath),
+        };
+    }
     throw new Error('Evaluation input must be an array or an object with a records array.');
 }
 
 function printReport(result) {
     console.log(`# Evaluation Run: ${result.generatedAt}`);
+    if (result.inputName) {
+        console.log(`Input: ${result.inputName}`);
+    }
     console.log(`Overall Status: ${result.overallStatus}`);
     console.log(`Sentences: ${result.sentenceCount}`);
     console.log('');
@@ -337,8 +352,11 @@ function printReport(result) {
 function main() {
     const inputPath = process.argv[2] || path.join(__dirname, 'sample-evaluation-set.json');
     const outputPath = process.argv[3] || null;
-    const records = loadRecords(inputPath);
-    const result = evaluateRecords(records);
+    const evaluationInput = loadEvaluationInput(inputPath);
+    const result = evaluateRecords(evaluationInput.records, {
+        targets: evaluationInput.targets,
+    });
+    result.inputName = evaluationInput.name;
     printReport(result);
 
     if (outputPath) {
@@ -364,5 +382,6 @@ module.exports = {
     evaluateOOVDetection,
     evaluateOOVResolution,
     evaluateRecords,
+    loadEvaluationInput,
     summarizeGraph,
 };

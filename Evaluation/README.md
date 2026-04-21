@@ -18,7 +18,7 @@ Write an archived JSON report by passing a second path:
 node Evaluation/evaluator.js path/to/evaluation-records.json path/to/report.json
 ```
 
-The included sample is intentionally small and OOV-heavy, so it demonstrates metric calculation but is not expected to pass every production target.
+The included sample is intentionally small and OOV-heavy. It includes relaxed `targets` in the JSON file so it can demonstrate a passing evaluator run. Larger benchmark files can omit `targets` to use the default production-style thresholds from `evaluator.js`, or provide their own target block.
 
 ## Input Shape
 
@@ -35,6 +35,11 @@ Each record can include:
 - `resolutions`: resolved OOV terms with `word`, `translation`, and `success`.
 - `sigmaData`: graph payload with `nodes` and `edges`.
 - `baselineUnresolvedTokenRate`: baseline unresolved/OOV rate for reduction comparisons.
+
+The top-level JSON object can include:
+
+- `name`: label shown in the report.
+- `targets`: optional metric thresholds for that specific evaluation set.
 
 ## Metrics
 
