@@ -1,0 +1,40 @@
+[2026-04-21T12:41:00.783Z] [INFO] Starting evaluation {"sentenceCount":12}
+[2026-04-21T12:41:00.791Z] [WARN] OOV words flagged for manual review {"count":3}
+[2026-04-21T12:41:00.791Z] [WARN] Evaluation checks failed {"failingChecks":["oovTokenRate","graphConnectivity"]}
+[2026-04-21T12:41:00.791Z] [INFO] Evaluation complete {"sentenceCount":12,"status":"FAIL"}
+[2026-04-21T12:41:00.798Z] [ERROR] Evaluation report: FAIL {"failingChecks":["oovTokenRate","graphConnectivity"]}
+2026-04-21 08:43:12,944 [INFO] HTTP Request: HEAD https://huggingface.co/Helsinki-NLP/opus-mt-en-fr/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-04-21 08:43:12,973 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Helsinki-NLP/opus-mt-en-fr/dd7f6540a7a48a7f4db59e5c0b9c42c8eea67f18/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-04-21 08:43:13,038 [INFO] HTTP Request: GET https://huggingface.co/api/models/Helsinki-NLP/opus-mt-en-fr/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-04-21 08:43:13,081 [INFO] HTTP Request: GET https://huggingface.co/api/models/Helsinki-NLP/opus-mt-en-fr/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-04-21 08:43:13,272 [INFO] HTTP Request: HEAD https://huggingface.co/Helsinki-NLP/opus-mt-en-fr/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-04-21 08:43:13,273 [WARNING] Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-04-21 08:43:13,297 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Helsinki-NLP/opus-mt-en-fr/dd7f6540a7a48a7f4db59e5c0b9c42c8eea67f18/config.json "HTTP/1.1 200 OK"
+2026-04-21 08:43:13,345 [INFO] HTTP Request: HEAD https://huggingface.co/Helsinki-NLP/opus-mt-en-fr/resolve/main/model.safetensors "HTTP/1.1 404 Not Found"
+2026-04-21 08:43:13,490 [INFO] HTTP Request: HEAD https://huggingface.co/Helsinki-NLP/opus-mt-en-fr/resolve/main/model.safetensors.index.json "HTTP/1.1 404 Not Found"
+2026-04-21 08:43:13,660 [INFO] HTTP Request: HEAD https://huggingface.co/Helsinki-NLP/opus-mt-en-fr/resolve/main/pytorch_model.bin "HTTP/1.1 302 Found"
+2026-04-21 08:43:13,699 [INFO] HTTP Request: HEAD https://huggingface.co/Helsinki-NLP/opus-mt-en-fr/resolve/main/model.safetensors "HTTP/1.1 404 Not Found"
+2026-04-21 08:43:13,872 [INFO] HTTP Request: GET https://huggingface.co/api/models/Helsinki-NLP/opus-mt-en-fr "HTTP/1.1 200 OK"
+2026-04-21 08:43:14,030 [INFO] HTTP Request: GET https://huggingface.co/api/models/Helsinki-NLP/opus-mt-en-fr/commits/main "HTTP/1.1 200 OK"
+2026-04-21 08:43:14,218 [INFO] HTTP Request: GET https://huggingface.co/api/models/Helsinki-NLP/opus-mt-en-fr/discussions?p=0 "HTTP/1.1 200 OK"
+2026-04-21 08:43:14,453 [INFO] HTTP Request: GET https://huggingface.co/api/models/Helsinki-NLP/opus-mt-en-fr/commits/refs%2Fpr%2F9 "HTTP/1.1 200 OK"
+2026-04-21 08:43:14,832 [INFO] HTTP Request: HEAD https://huggingface.co/Helsinki-NLP/opus-mt-en-fr/resolve/refs%2Fpr%2F9/model.safetensors.index.json "HTTP/1.1 404 Not Found"
+2026-04-21 08:43:15,050 [INFO] HTTP Request: HEAD https://huggingface.co/Helsinki-NLP/opus-mt-en-fr/resolve/refs%2Fpr%2F9/model.safetensors "HTTP/1.1 302 Found"
+2026-04-21 08:43:15,254 [INFO] HTTP Request: HEAD https://huggingface.co/Helsinki-NLP/opus-mt-en-fr/resolve/main/generation_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-04-21 08:43:15,280 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Helsinki-NLP/opus-mt-en-fr/dd7f6540a7a48a7f4db59e5c0b9c42c8eea67f18/generation_config.json "HTTP/1.1 200 OK"
+[2026-04-21T12:44:04.105Z] [INFO] Starting evaluation {"sentenceCount":12}
+[2026-04-21T12:44:04.112Z] [WARN] OOV words flagged for manual review {"count":3}
+[2026-04-21T12:44:04.112Z] [WARN] Evaluation checks failed {"failingChecks":["oovTokenRate","graphConnectivity"]}
+[2026-04-21T12:44:04.112Z] [INFO] Evaluation complete {"sentenceCount":12,"status":"FAIL"}
+[2026-04-21T12:44:04.118Z] [ERROR] Evaluation report: FAIL {"failingChecks":["oovTokenRate","graphConnectivity"]}
+2026-04-21 12:19:37,096 [WARNING] Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-04-21 12:20:33,182 [INFO] OOV detection complete — totalTokens=7 oovCount=0
+2026-04-21 12:20:49,625 [INFO] OOV detection complete — totalTokens=7 oovCount=0
+2026-04-21 12:21:09,377 [INFO] OOV detection complete — totalTokens=8 oovCount=0
+2026-04-21 12:24:28,966 [INFO] OOV detection complete — totalTokens=7 oovCount=0
+2026-04-21 12:24:33,147 [INFO] OOV detection complete — totalTokens=7 oovCount=0
+2026-04-21 12:26:14,907 [WARNING] Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-04-21 12:26:25,367 [INFO] OOV detection complete — totalTokens=7 oovCount=1
+2026-04-21 12:31:53,241 [INFO] OOV detection complete — totalTokens=7 oovCount=1
+2026-04-21 12:32:25,376 [INFO] OOV detection complete — totalTokens=7 oovCount=1
+2026-04-21 12:32:54,015 [INFO] OOV detection complete — totalTokens=1 oovCount=1

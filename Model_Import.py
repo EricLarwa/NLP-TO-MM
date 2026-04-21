@@ -14,12 +14,15 @@ MODEL_NAME = "Helsinki-NLP/opus-mt-en-fr"
 HOST = os.getenv("PY_MODEL_HOST", "127.0.0.1")
 PORT = int(os.getenv("PY_MODEL_PORT", "8001"))
 
-_log_path = os.path.join(os.path.dirname(__file__), "Evaluation", "evaluation.log")
+_log_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Evaluation", "evaluation.log")
 _log_handler = logging.handlers.RotatingFileHandler(
     _log_path, maxBytes=5 * 1024 * 1024, backupCount=3, encoding="utf-8"
 )
 _log_handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s"))
-logging.basicConfig(level=logging.INFO, handlers=[_log_handler])
+logging.basicConfig(level=logging.INFO, handlers=[_log_handler], force=True)
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
+logging.getLogger("transformers").setLevel(logging.WARNING)
 app_log = logging.getLogger("nlp_model")
 
 DOMAIN_KEYWORDS = {
@@ -75,14 +78,31 @@ def inspect_token(word):
 	token_ids = tokenizer.convert_tokens_to_ids(pieces)
 	unk_token = tokenizer.unk_token
 	unk_token_id = tokenizer.unk_token_id
-	is_oov = any(piece == unk_token for piece in pieces) or any(token_id == unk_token_id for token_id in token_ids)
+
+	# Direct unk: any subword piece maps to the unknown token.
+	is_direct_unk = any(piece == unk_token for piece in pieces) or any(tid == unk_token_id for tid in token_ids)
+
+	# Whole-word check: SentencePiece can fragment any word into known subword
+	# pieces without ever emitting <unk>, so slang/neologisms like "doomscrolling"
+	# pass the direct check silently.  If the word is not present as a single
+	# vocabulary entry (with the sentence-initial ▁ prefix), treat it as OOV.
+	whole_word_id = tokenizer.convert_tokens_to_ids(f"\u2581{word.lower()}")
+	is_fragmented = whole_word_id == unk_token_id
+
+	is_oov = is_direct_unk or is_fragmented
+	if is_direct_unk:
+		reason = "unknown_token"
+	elif is_fragmented:
+		reason = "fragmented_word"
+	else:
+		reason = "in_vocabulary"
 
 	return {
 		"word": word,
 		"pieces": pieces,
 		"tokenIds": token_ids,
 		"isOov": is_oov,
-		"reason": "unknown_token" if is_oov else "in_vocabulary",
+		"reason": reason,
 	}
 
 
@@ -90,7 +110,7 @@ def detect_oov_words(text):
 	"""Extract unique words and classify them using the Marian tokenizer vocabulary."""
 	results = [inspect_token(word) for word in tokenize_words(text)]
 	oov_count = sum(1 for item in results if item["isOov"])
-	app_log.info("OOV detection complete", extra={"totalTokens": len(results), "oovCount": oov_count})
+	app_log.info("OOV detection complete — totalTokens=%d oovCount=%d", len(results), oov_count)
 	return results
 
 

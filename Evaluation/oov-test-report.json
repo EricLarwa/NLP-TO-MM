@@ -1,0 +1,77 @@
+{
+  "generatedAt": "2026-04-21T12:44:04.112Z",
+  "sentenceCount": 12,
+  "targets": {
+    "bleuScore": 28,
+    "oovTokenRate": 5,
+    "oovDetectionRecall": 90,
+    "oovDetectionF1": 80,
+    "oovResolutionRate": 75,
+    "graphGrowthRate": 15,
+    "graphConnectivity": 1.8,
+    "dominantEdgeTypePercent": 60,
+    "minimumDomainCount": 4
+  },
+  "translationMetrics": {
+    "bleuScore": 99.25
+  },
+  "oovDetection": {
+    "truePositive": 14,
+    "falsePositive": 0,
+    "falseNegative": 0,
+    "precision": 100,
+    "recall": 100,
+    "f1": 100,
+    "oovTokenRate": 14.89,
+    "baselineUnresolvedTokenRate": 37.92,
+    "unresolvedTokenRateReduction": 23.03
+  },
+  "oovResolution": {
+    "totalOOV": 14,
+    "resolved": 11,
+    "unresolved": 3,
+    "manualReviewCount": 3,
+    "resolutionRate": 78.57,
+    "resolutionPrecision": 100,
+    "resolutionF1": 88
+  },
+  "graphMetrics": {
+    "totalNodes": 30,
+    "totalEdges": 25,
+    "graphGrowthRate": 2500,
+    "connectivity": 0.83,
+    "confidenceDistribution": {
+      "inferred": 12,
+      "verified": 15,
+      "unknown": 3
+    },
+    "edgeTypeDistribution": {
+      "translates_to": 11,
+      "belongs_to": 14
+    },
+    "dominantEdgeTypePercent": 56,
+    "domainCount": 5,
+    "domains": [
+      "legal",
+      "medical",
+      "proper_noun",
+      "slang",
+      "technical"
+    ],
+    "missingEdgeReferences": 0,
+    "integrityPass": true
+  },
+  "checks": {
+    "bleuScore": true,
+    "oovTokenRate": false,
+    "oovDetectionRecall": true,
+    "oovDetectionF1": true,
+    "oovResolutionRate": true,
+    "graphGrowthRate": true,
+    "graphConnectivity": false,
+    "dominantEdgeTypePercent": true,
+    "domainCoverage": true,
+    "graphIntegrity": true
+  },
+  "overallStatus": "FAIL"
+}

@@ -3,7 +3,7 @@ const {
     EDGE_TYPES,
 } = require('./index');
 
-const RESOLVER_BASE_URL = process.env.PYTHON_RESOLVER_URL || 'http://127.0.0.1:8000';
+const RESOLVER_BASE_URL = process.env.PYTHON_RESOLVER_URL || 'http://127.0.0.1:8001';
 
 function buildNodeId(word, language) {
     return `node_${language}_${word.toLowerCase().replace(/\s+/g, '_')}`;

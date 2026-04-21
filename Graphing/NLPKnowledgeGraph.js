@@ -21,7 +21,7 @@ class NLPKnowledgeGraph {
         this.edges = new Map();
         this.edgeIndex = 0;
         this.pythonResolverUrl =
-            options.pythonResolverUrl || process.env.PYTHON_RESOLVER_URL || 'http://127.0.0.1:8000';
+            options.pythonResolverUrl || process.env.PYTHON_RESOLVER_URL || 'http://127.0.0.1:8001';
         this.pythonResolverTimeoutMs = options.pythonResolverTimeoutMs || 7000;
         this.sigmaGraphData = {
             nodes: [],

@@ -3,12 +3,10 @@ const path = require('path');
 const {
     NLPKnowledgeGraph,
     EDGE_TYPES,
-} = require('./index');
-const {
     CONFIDENCE_STATES,
 } = require('./index');
 
-const RESOLVER_BASE_URL = process.env.PYTHON_RESOLVER_URL || 'http://127.0.0.1:8000';
+const RESOLVER_BASE_URL = process.env.PYTHON_RESOLVER_URL || 'http://127.0.0.1:8001';
 const OUTPUT_PATH = path.join(__dirname, 'sample-graph.json');
 
 function buildNodeId(word, language) {
@@ -73,12 +71,12 @@ async function main() {
         if (result.resolution) {
             const targetLanguage = sample.language === 'en' ? 'fr' : sample.language;
             const targetNode = graph.getOrCreateNode(result.resolution, targetLanguage);
-                graph.updateNodeConfidence(
-                    targetNode.id,
-                    CONFIDENCE_STATES.INFERRED,
-                    result.stage,
-                    result.resolution
-                );
+            graph.updateNodeConfidence(
+                targetNode.id,
+                CONFIDENCE_STATES.INFERRED,
+                result.stage,
+                result.resolution
+            );
             if (sourceNode && targetNode) {
                 graph.addEdge(sourceNode.id, targetNode.id, EDGE_TYPES.TRANSLATES_TO, 0.95);
             }
